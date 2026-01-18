@@ -1,0 +1,64 @@
+{
+  "global_gestures": {
+    "Right → Down": {
+      "Keyboard": {
+        "keys": ["VK_LWIN", "L"]
+      }
+    },
+    "Down": {
+      "Window": {
+        "command": "Minimize"
+      }
+    },
+    "Up": {
+      "Window": {
+        "command": "Maximize"
+      }
+    },
+    "Left": {
+      "Mouse": {
+        "button": "X1",
+        "action_type": "Click"
+      }
+    },
+    "Right": {
+      "Mouse": {
+        "button": "X2",
+        "action_type": "Click"
+      }
+    },
+    "Up → Down": {
+      "Window": {
+        "command": "ShowDesktop"
+      }
+    }
+  },
+  "app_gestures": {
+    "chrome.exe": {
+      "Down → Up": {
+        "Keyboard": {
+          "keys": ["VK_CONTROL", "T"]
+        }
+      }
+    },
+    "firefox.exe": {
+      "Down → Up": {
+        "Keyboard": {
+          "keys": ["VK_CONTROL", "T"]
+        }
+      }
+    }
+  },
+  "disabled_apps": [
+    "vmware.exe",
+    "virtualbox.exe"
+  ],
+  "settings": {
+    "trigger_button": "Middle",
+    "enable_8_direction": false,
+    "initial_valid_move": 15,
+    "effective_move": 20,
+    "min_stroke_length": 30,
+    "stay_timeout": 300
+  }
+}

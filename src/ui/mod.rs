@@ -6,5 +6,9 @@
 //! - Notifications
 
 pub mod tray;
-pub mod settings;
-pub mod notifications;
+
+pub use tray::TrayIcon;
+
+// TODO: Implement these modules
+// pub mod settings;
+// pub mod notifications;

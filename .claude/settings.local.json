@@ -12,7 +12,8 @@
       "Bash(cargo test:*)",
       "Bash(grep:*)",
       "Bash(cargo run:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git add:*)"
     ]
   }
 }
