@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openspec list:*)",
+      "mcp__zread__get_repo_structure",
+      "mcp__zread__read_file",
+      "mcp__zread__search_doc",
+      "Bash(openspec validate:*)",
+      "Bash(openspec init:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(grep:*)",
+      "Bash(cargo run:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
