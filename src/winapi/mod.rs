@@ -9,6 +9,7 @@
 pub mod helpers;
 pub mod hook;
 pub mod input;
+pub mod message_loop;
 
 // TODO: Implement these modules
 // pub mod window;
