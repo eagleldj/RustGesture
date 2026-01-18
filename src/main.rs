@@ -9,6 +9,7 @@ use tracing_subscriber;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::path::PathBuf;
+use std::thread;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -51,6 +52,8 @@ async fn main() -> Result<()> {
     let _tray = ui::TrayIcon::new(enabled.clone())?;
     info!("System tray initialized");
 
+    // TODO: Create message loop and hook
+    // This is a placeholder for the MVP implementation
     info!("RustGesture started successfully");
     info!("Gesture recognition is {}", if enabled.load(Ordering::SeqCst) { "enabled" } else { "disabled" });
 

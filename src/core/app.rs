@@ -4,8 +4,11 @@
 
 use crate::config::{config::GestureConfig, manager::ConfigManager};
 use crate::core::{executor::CommandExecutor, gesture::Gesture, intent::GestureIntentFinder, recognizer::{create_shared_recognizer, GestureRecognizerEvent, SharedRecognizer}};
-use std::sync::Mutex;
-use tracing::{error, info, warn};
+use crate::core::hook_callback::GestureHookCallback;
+use crate::winapi::hook::MouseHook;
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
+use tracing::{debug, error, info, warn};
 
 /// Gesture application
 pub struct GestureApp {
@@ -13,6 +16,8 @@ pub struct GestureApp {
     recognizer: SharedRecognizer,
     intent_finder: Mutex<GestureIntentFinder>,
     executor: CommandExecutor,
+    hook: Option<MouseHook>,
+    enabled: Arc<AtomicBool>,
 }
 
 impl GestureApp {
@@ -23,6 +28,9 @@ impl GestureApp {
         // Load configuration
         let config_manager = Mutex::new(ConfigManager::new(None)?);
         let config = config_manager.lock().unwrap().config().clone();
+
+        // Create enabled state
+        let enabled = Arc::new(AtomicBool::new(true));
 
         // Create intent finder
         let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
@@ -36,6 +44,61 @@ impl GestureApp {
         // Create executor
         let executor = CommandExecutor::new();
 
+        // Set up gesture recognition callback
+        let intent_finder_clone = Arc::new(Mutex::new(GestureIntentFinder::new(config.clone())));
+        let executor_clone = executor.clone(); // Executor needs to be cloned
+
+        // Set event callback on recognizer
+        {
+            let mut recognizer = recognizer.lock().unwrap();
+            recognizer.set_event_callback(move |event| {
+                match event {
+                    GestureRecognizerEvent::GestureCompleted(gesture) => {
+                        info!("Gesture completed: {:?}", gesture);
+
+                        // Find matching intent
+                        let finder = intent_finder_clone.lock().unwrap();
+                        if let Some(intent) = finder.find(&gesture, None) {
+                            info!("Found matching action for gesture: {:?}", gesture);
+
+                            // Execute the action
+                            if let Err(e) = executor_clone.execute(&intent.action) {
+                                error!("Failed to execute action: {:?}", e);
+                            }
+                        } else {
+                            warn!("No matching action found for gesture: {:?}", gesture);
+                        }
+                    }
+                    GestureRecognizerEvent::GestureCancelled => {
+                        debug!("Gesture cancelled");
+                    }
+                    GestureRecognizerEvent::GestureStarted(context) => {
+                        debug!("Gesture started at: ({}, {})", context.start_point.x, context.start_point.y);
+                    }
+                    GestureRecognizerEvent::GestureRecognized(gesture, _is_final) => {
+                        debug!("Gesture recognized: {:?}", gesture);
+                    }
+                    GestureRecognizerEvent::ModifierDetected(modifier) => {
+                        debug!("Modifier detected: {:?}", modifier);
+                    }
+                }
+            });
+        }
+
+        // Create intent finder for the app struct
+        let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
+
+        // Create and install mouse hook
+        let mut hook = MouseHook::new();
+        let callback = GestureHookCallback::new(
+            recognizer.clone(),
+            enabled.clone(),
+        );
+        hook.set_callback(Box::new(callback));
+
+        // Install the hook
+        hook.install()?;
+
         info!("RustGesture application initialized successfully");
 
         Ok(Self {
@@ -43,6 +106,8 @@ impl GestureApp {
             recognizer,
             intent_finder,
             executor,
+            hook: Some(hook),
+            enabled,
         })
     }
 
@@ -115,6 +180,23 @@ impl GestureApp {
     /// Get the config manager
     pub fn config_manager(&self) -> &Mutex<ConfigManager> {
         &self.config_manager
+    }
+}
+
+impl Drop for GestureApp {
+    fn drop(&mut self) {
+        info!("GestureApp dropping - cleaning up resources");
+
+        // Uninstall the hook if it exists
+        if let Some(mut hook) = self.hook.take() {
+            if let Err(e) = hook.uninstall() {
+                error!("Failed to uninstall mouse hook: {:?}", e);
+            } else {
+                info!("Mouse hook uninstalled successfully");
+            }
+        }
+
+        info!("GestureApp cleanup complete");
     }
 }
 

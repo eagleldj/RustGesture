@@ -6,9 +6,14 @@ use windows::Win32::Foundation::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use crate::core::gesture::{GestureTriggerButton, Point};
 use anyhow::{Result, anyhow};
+
+// Global callback for mouse hook
+// Using a Mutex to allow thread-safe access
+static MOUSE_HOOK_CALLBACK: Mutex<Option<Box<dyn MouseHookCallback>>> = Mutex::new(None);
 
 /// Mouse event types
 #[derive(Debug, Clone, Copy)]
@@ -51,6 +56,15 @@ pub trait MouseHookCallback: Send + Sync {
     fn on_mouse_event(&self, event: &MouseEvent) -> bool;
 }
 
+/// Dummy callback for placeholder
+struct DummyCallback;
+
+impl MouseHookCallback for DummyCallback {
+    fn on_mouse_event(&self, _event: &MouseEvent) -> bool {
+        false
+    }
+}
+
 /// Low-level mouse hook
 pub struct MouseHook {
     hook: Option<HHOOK>,
@@ -68,7 +82,10 @@ impl MouseHook {
 
     /// Set the callback for mouse events
     pub fn set_callback(&mut self, callback: Box<dyn MouseHookCallback>) {
-        self.callback = Some(callback);
+        // Store callback in global static variable
+        let mut global_callback = MOUSE_HOOK_CALLBACK.lock().unwrap();
+        *global_callback = Some(callback);
+        self.callback = Some(Box::new(DummyCallback));
     }
 
     /// Install the mouse hook
@@ -106,6 +123,9 @@ impl MouseHook {
         if let Some(hook) = self.hook.take() {
             unsafe {
                 if UnhookWindowsHookEx(hook).is_ok() {
+                    // Clear the global callback
+                    let mut global_callback = MOUSE_HOOK_CALLBACK.lock().unwrap();
+                    *global_callback = None;
                     Ok(())
                 } else {
                     Err(anyhow!("Failed to unhook mouse hook"))
@@ -117,11 +137,15 @@ impl MouseHook {
     }
 
     /// Hook procedure (called by Windows)
+    /// IMPORTANT: This must return VERY quickly to avoid mouse lag!
     unsafe extern "system" fn hook_proc(
         n_code: i32,
         w_param: WPARAM,
         l_param: LPARAM,
     ) -> LRESULT {
+        // Always call next hook first to ensure minimal latency
+        let result = CallNextHookEx(HHOOK::default(), n_code, w_param, l_param);
+
         if n_code as u32 == HC_ACTION {
             // Extract hook structure
             let hook_struct = *(l_param.0 as *const MSLLHOOKSTRUCT);
@@ -130,16 +154,22 @@ impl MouseHook {
             const SIMULATED_EVENT_TAG: usize = 19900620;
             let extra_info = hook_struct.dwExtraInfo as usize;
             if extra_info == SIMULATED_EVENT_TAG {
-                return CallNextHookEx(HHOOK::default(), n_code, w_param, l_param);
+                return result;
             }
 
             // Convert to our MouseEvent type
-            let _event = Self::convert_mouse_event(w_param.0 as u32, &hook_struct);
+            let event = Self::convert_mouse_event(w_param.0 as u32, &hook_struct);
 
-            // TODO: Implement proper callback dispatch
+            // Dispatch to callback (if any) - use try_lock for speed
+            if let Ok(global_callback) = MOUSE_HOOK_CALLBACK.try_lock() {
+                if let Some(ref callback) = *global_callback {
+                    // Send event to async channel - this is ultra fast!
+                    let _ = callback.on_mouse_event(&event);
+                }
+            }
         }
 
-        CallNextHookEx(HHOOK::default(), n_code, w_param, l_param)
+        result
     }
 
     /// Convert Windows mouse message to MouseEvent

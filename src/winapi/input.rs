@@ -14,6 +14,7 @@ use crate::config::config::{KeyboardAction, MouseAction, WindowAction, WindowCom
 pub const SIMULATED_EVENT_TAG: usize = 19900620;
 
 /// Input simulator
+#[derive(Clone, Copy)]
 pub struct InputSimulator;
 
 impl InputSimulator {

@@ -8,6 +8,7 @@ use anyhow::Result;
 use tracing::info;
 
 /// Command executor
+#[derive(Clone)]
 pub struct CommandExecutor {
     simulator: InputSimulator,
 }
