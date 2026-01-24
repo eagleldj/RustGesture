@@ -42,6 +42,8 @@ pub enum GestureModifier {
     LeftButtonDown,
     RightButtonDown,
     MiddleButtonDown,
+    X1ButtonDown,
+    X2ButtonDown,
     WheelForward,
     WheelBackward,
 }

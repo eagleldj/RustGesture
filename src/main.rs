@@ -100,6 +100,7 @@ async fn main() -> Result<()> {
 
     info!("RustGesture started successfully");
     info!("Gesture recognition is {}", if enabled.load(Ordering::SeqCst) { "enabled" } else { "disabled" });
+    info!("Multi-button support enabled: Right, Middle, X1, X2");
 
     // Start performance monitoring task
     let enabled_monitor = enabled.clone();

@@ -75,6 +75,8 @@ impl PathTracker {
             MouseEvent::LeftButtonDown(x, y) => {
                 if trigger_button == GestureTriggerButton::Right
                     || trigger_button == GestureTriggerButton::Middle
+                    || trigger_button == GestureTriggerButton::X1
+                    || trigger_button == GestureTriggerButton::X2
                 {
                     self.on_modifier(GestureModifier::LeftButtonDown);
                 } else {
@@ -95,7 +97,22 @@ impl PathTracker {
                     self.on_modifier(GestureModifier::MiddleButtonDown);
                 }
             }
-            MouseEvent::RightButtonUp(_, _) | MouseEvent::MiddleButtonUp(_, _) => {
+            MouseEvent::XButtonDown(x, y, btn) => {
+                // XBUTTON1 = 1, XBUTTON2 = 2
+                let is_x1 = *btn == 1 && trigger_button == GestureTriggerButton::X1;
+                let is_x2 = *btn == 2 && trigger_button == GestureTriggerButton::X2;
+                if is_x1 || is_x2 {
+                    self.on_mouse_down(*x, *y, trigger_button);
+                } else {
+                    // Treat as modifier
+                    if *btn == 1 {
+                        self.on_modifier(GestureModifier::X1ButtonDown);
+                    } else if *btn == 2 {
+                        self.on_modifier(GestureModifier::X2ButtonDown);
+                    }
+                }
+            }
+            MouseEvent::RightButtonUp(_, _) | MouseEvent::MiddleButtonUp(_, _) | MouseEvent::XButtonUp(_, _, _) => {
                 if self.state == TrackerState::Tracking {
                     self.on_mouse_up();
                 }

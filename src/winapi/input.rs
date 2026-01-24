@@ -27,10 +27,20 @@ impl InputSimulator {
     pub fn simulate_keyboard(&self, action: &KeyboardAction) -> anyhow::Result<()> {
         debug!("Simulating keyboard: {:?}", action.keys);
 
-        // TODO: Map key names to virtual key codes
-        // For now, this is a placeholder
+        if action.keys.is_empty() {
+            return Ok(());
+        }
+
+        // Step 1: Press all keys down in order
         for key in &action.keys {
             self.send_key(key, true)?;
+        }
+
+        // Small delay to ensure the keys are registered
+        std::thread::sleep(std::time::Duration::from_millis(10));
+
+        // Step 2: Release all keys in reverse order
+        for key in action.keys.iter().rev() {
             self.send_key(key, false)?;
         }
 
@@ -91,6 +101,57 @@ impl InputSimulator {
             "VK_RETURN" | "ENTER" => Ok(VIRTUAL_KEY(0x0D)),
             "VK_ESCAPE" | "ESC" => Ok(VIRTUAL_KEY(0x1B)),
             "VK_SPACE" | "SPACE" => Ok(VIRTUAL_KEY(0x20)),
+            // Letter keys (A-Z): VK_0x41 to VK_0x5A
+            "VK_A" | "A" => Ok(VIRTUAL_KEY(0x41)),
+            "VK_B" | "B" => Ok(VIRTUAL_KEY(0x42)),
+            "VK_C" | "C" => Ok(VIRTUAL_KEY(0x43)),
+            "VK_D" | "D" => Ok(VIRTUAL_KEY(0x44)),
+            "VK_E" | "E" => Ok(VIRTUAL_KEY(0x45)),
+            "VK_F" | "F" => Ok(VIRTUAL_KEY(0x46)),
+            "VK_G" | "G" => Ok(VIRTUAL_KEY(0x47)),
+            "VK_H" | "H" => Ok(VIRTUAL_KEY(0x48)),
+            "VK_I" | "I" => Ok(VIRTUAL_KEY(0x49)),
+            "VK_J" | "J" => Ok(VIRTUAL_KEY(0x4A)),
+            "VK_K" | "K" => Ok(VIRTUAL_KEY(0x4B)),
+            "VK_L" | "L" => Ok(VIRTUAL_KEY(0x4C)),
+            "VK_M" | "M" => Ok(VIRTUAL_KEY(0x4D)),
+            "VK_N" | "N" => Ok(VIRTUAL_KEY(0x4E)),
+            "VK_O" | "O" => Ok(VIRTUAL_KEY(0x4F)),
+            "VK_P" | "P" => Ok(VIRTUAL_KEY(0x50)),
+            "VK_Q" | "Q" => Ok(VIRTUAL_KEY(0x51)),
+            "VK_R" | "R" => Ok(VIRTUAL_KEY(0x52)),
+            "VK_S" | "S" => Ok(VIRTUAL_KEY(0x53)),
+            "VK_T" | "T" => Ok(VIRTUAL_KEY(0x54)),
+            "VK_U" | "U" => Ok(VIRTUAL_KEY(0x55)),
+            "VK_V" | "V" => Ok(VIRTUAL_KEY(0x56)),
+            "VK_W" | "W" => Ok(VIRTUAL_KEY(0x57)),
+            "VK_X" | "X" => Ok(VIRTUAL_KEY(0x58)),
+            "VK_Y" | "Y" => Ok(VIRTUAL_KEY(0x59)),
+            "VK_Z" | "Z" => Ok(VIRTUAL_KEY(0x5A)),
+            // Number keys (0-9): VK_0x30 to VK_0x39
+            "VK_0" | "0" => Ok(VIRTUAL_KEY(0x30)),
+            "VK_1" | "1" => Ok(VIRTUAL_KEY(0x31)),
+            "VK_2" | "2" => Ok(VIRTUAL_KEY(0x32)),
+            "VK_3" | "3" => Ok(VIRTUAL_KEY(0x33)),
+            "VK_4" | "4" => Ok(VIRTUAL_KEY(0x34)),
+            "VK_5" | "5" => Ok(VIRTUAL_KEY(0x35)),
+            "VK_6" | "6" => Ok(VIRTUAL_KEY(0x36)),
+            "VK_7" | "7" => Ok(VIRTUAL_KEY(0x37)),
+            "VK_8" | "8" => Ok(VIRTUAL_KEY(0x38)),
+            "VK_9" | "9" => Ok(VIRTUAL_KEY(0x39)),
+            // Function keys
+            "VK_F1" | "F1" => Ok(VIRTUAL_KEY(0x70)),
+            "VK_F2" | "F2" => Ok(VIRTUAL_KEY(0x71)),
+            "VK_F3" | "F3" => Ok(VIRTUAL_KEY(0x72)),
+            "VK_F4" | "F4" => Ok(VIRTUAL_KEY(0x73)),
+            "VK_F5" | "F5" => Ok(VIRTUAL_KEY(0x74)),
+            "VK_F6" | "F6" => Ok(VIRTUAL_KEY(0x75)),
+            "VK_F7" | "F7" => Ok(VIRTUAL_KEY(0x76)),
+            "VK_F8" | "F8" => Ok(VIRTUAL_KEY(0x77)),
+            "VK_F9" | "F9" => Ok(VIRTUAL_KEY(0x78)),
+            "VK_F10" | "F10" => Ok(VIRTUAL_KEY(0x79)),
+            "VK_F11" | "F11" => Ok(VIRTUAL_KEY(0x7A)),
+            "VK_F12" | "F12" => Ok(VIRTUAL_KEY(0x7B)),
             // Add more key mappings as needed
             _ => {
                 // Try to parse as virtual key code

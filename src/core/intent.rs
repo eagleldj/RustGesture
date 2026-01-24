@@ -199,6 +199,8 @@ impl GestureIntentFinder {
                 GestureModifier::LeftButtonDown => "+ LeftButton",
                 GestureModifier::RightButtonDown => "+ RightButton",
                 GestureModifier::MiddleButtonDown => "+ MiddleButton",
+                GestureModifier::X1ButtonDown => "+ X1Button",
+                GestureModifier::X2ButtonDown => "+ X2Button",
                 GestureModifier::WheelForward => "+ WheelForward",
                 GestureModifier::WheelBackward => "+ WheelBackward",
             };

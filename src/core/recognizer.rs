@@ -74,7 +74,17 @@ impl GestureRecognizer {
 
     /// Handle a mouse event
     pub fn handle_mouse_event(&mut self, event: &MouseEvent) {
-        self.tracker.handle_mouse_event(event, self.trigger_button);
+        // Determine trigger button from event type for multi-button support
+        let trigger_btn = match event {
+            MouseEvent::RightButtonDown(_, _) => GestureTriggerButton::Right,
+            MouseEvent::MiddleButtonDown(_, _) => GestureTriggerButton::Middle,
+            MouseEvent::XButtonDown(_, _, btn) => {
+                if *btn == 1 { GestureTriggerButton::X1 } else { GestureTriggerButton::X2 }
+            }
+            _ => self.trigger_button, // Use configured trigger for other events
+        };
+
+        self.tracker.handle_mouse_event(event, trigger_btn);
     }
 
     /// Check for timeout
