@@ -5,8 +5,11 @@
 use windows::Win32::Foundation::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
+use windows::Win32::System::LibraryLoader::GetModuleHandleW;
+use windows::core::PCWSTR;
 use std::sync::Arc;
 use std::sync::Mutex;
+use tracing::info;
 
 use crate::core::gesture::{GestureTriggerButton, Point};
 use anyhow::{Result, anyhow};
@@ -14,6 +17,30 @@ use anyhow::{Result, anyhow};
 // Global callback for mouse hook
 // Using a Mutex to allow thread-safe access
 static MOUSE_HOOK_CALLBACK: Mutex<Option<Box<dyn MouseHookCallback>>> = Mutex::new(None);
+
+// Performance monitoring: count how many times hook is called
+static HOOK_CALL_COUNT: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+// Performance monitoring: last hook duration in nanoseconds
+static LAST_HOOK_DURATION_NS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+// Get performance stats
+pub fn get_hook_stats() -> (u64, u64) {
+    let count = HOOK_CALL_COUNT.load(std::sync::atomic::Ordering::Relaxed);
+    let duration_ns = LAST_HOOK_DURATION_NS.load(std::sync::atomic::Ordering::Relaxed);
+    (count, duration_ns)
+}
+
+// Global flag to track if we should process mouse moves
+// Only process moves when trigger button is pressed
+static PROCESSING_MOUSE_MOVES: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+// Counter for sampling mouse moves to reduce frequency
+static MOUSE_MOVE_COUNTER: std::sync::atomic::AtomicUsize =
+    std::sync::atomic::AtomicUsize::new(0);
 
 /// Mouse event types
 #[derive(Debug, Clone, Copy)]
@@ -56,6 +83,17 @@ pub trait MouseHookCallback: Send + Sync {
     fn on_mouse_event(&self, event: &MouseEvent) -> bool;
 }
 
+/// Set whether to process mouse move events
+/// Should be called when trigger button is pressed/released
+pub fn set_processing_mouse_moves(process: bool) {
+    PROCESSING_MOUSE_MOVES.store(process, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Check if currently processing mouse moves (for logging)
+pub fn is_processing_mouse_moves() -> bool {
+    PROCESSING_MOUSE_MOVES.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Dummy callback for placeholder
 struct DummyCallback;
 
@@ -95,18 +133,26 @@ impl MouseHook {
         }
 
         unsafe {
+            // Get the actual HINSTANCE for this executable (not the DLL default)
+            let hinstance = GetModuleHandleW(PCWSTR::null())
+                .map_err(|e| anyhow!("Failed to get module handle: {:?}", e))?;
+
+            info!("Installing mouse hook with HINSTANCE: {:?}", hinstance);
+
             let hook = SetWindowsHookExW(
                 WH_MOUSE_LL,
                 Some(Self::hook_proc),
-                HINSTANCE::default(),
+                hinstance,  // Use real HINSTANCE, not default!
                 0,
             );
 
             match hook {
                 Ok(h) => {
                     if h.is_invalid() {
-                        return Err(anyhow!("Failed to set mouse hook: invalid handle"));
+                        let error = GetLastError();
+                        return Err(anyhow!("Failed to set mouse hook: invalid handle, error: {:?}", error));
                     }
+                    info!("Mouse hook installed successfully: {:?}", h);
                     self.hook = Some(h);
                 }
                 Err(e) => {
@@ -137,37 +183,63 @@ impl MouseHook {
     }
 
     /// Hook procedure (called by Windows)
-    /// IMPORTANT: This must return VERY quickly to avoid mouse lag!
+    /// With message loop running, hooks should work smoothly
     unsafe extern "system" fn hook_proc(
         n_code: i32,
         w_param: WPARAM,
         l_param: LPARAM,
     ) -> LRESULT {
-        // Always call next hook first to ensure minimal latency
+        // Performance monitoring: start timing
+        let start = std::time::Instant::now();
+        HOOK_CALL_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+        // Call next hook FIRST (critical for minimal latency)
         let result = CallNextHookEx(HHOOK::default(), n_code, w_param, l_param);
 
         if n_code as u32 == HC_ACTION {
-            // Extract hook structure
-            let hook_struct = *(l_param.0 as *const MSLLHOOKSTRUCT);
+            let msg = w_param.0 as u32;
 
-            // Check if this is a simulated event (to avoid feedback loops)
+            // Skip MouseMove when not tracking
+            if msg == WM_MOUSEMOVE {
+                if !PROCESSING_MOUSE_MOVES.load(std::sync::atomic::Ordering::Relaxed) {
+                    // Record duration and return
+                    let duration = start.elapsed().as_nanos() as u64;
+                    LAST_HOOK_DURATION_NS.store(duration, std::sync::atomic::Ordering::Relaxed);
+                    return result;
+                }
+
+                // Sample mouse moves (every 5th event)
+                let count = MOUSE_MOVE_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                if count % 5 != 0 {
+                    let duration = start.elapsed().as_nanos() as u64;
+                    LAST_HOOK_DURATION_NS.store(duration, std::sync::atomic::Ordering::Relaxed);
+                    return result;
+                }
+            }
+
+            // Check for simulated events
             const SIMULATED_EVENT_TAG: usize = 19900620;
+            let hook_struct = *(l_param.0 as *const MSLLHOOKSTRUCT);
             let extra_info = hook_struct.dwExtraInfo as usize;
             if extra_info == SIMULATED_EVENT_TAG {
+                let duration = start.elapsed().as_nanos() as u64;
+                LAST_HOOK_DURATION_NS.store(duration, std::sync::atomic::Ordering::Relaxed);
                 return result;
             }
 
-            // Convert to our MouseEvent type
-            let event = Self::convert_mouse_event(w_param.0 as u32, &hook_struct);
+            // Convert and dispatch event
+            let event = Self::convert_mouse_event(msg, &hook_struct);
 
-            // Dispatch to callback (if any) - use try_lock for speed
             if let Ok(global_callback) = MOUSE_HOOK_CALLBACK.try_lock() {
                 if let Some(ref callback) = *global_callback {
-                    // Send event to async channel - this is ultra fast!
                     let _ = callback.on_mouse_event(&event);
                 }
             }
         }
+
+        // Record duration
+        let duration = start.elapsed().as_nanos() as u64;
+        LAST_HOOK_DURATION_NS.store(duration, std::sync::atomic::Ordering::Relaxed);
 
         result
     }

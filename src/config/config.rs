@@ -89,6 +89,42 @@ pub enum Action {
     Run(RunAction),
 }
 
+impl Action {
+    /// Get display info for this action (name and shortcut)
+    pub fn display_info(&self) -> String {
+        match self {
+            Action::Keyboard(kb) => {
+                format!("Keyboard: {}", kb.keys.join("+"))
+            }
+            Action::Mouse(mouse) => {
+                let action_str = match mouse.action_type {
+                    MouseActionType::Click => "Click",
+                    MouseActionType::DoubleClick => "DoubleClick",
+                };
+                format!("Mouse: {} {}", mouse.button.as_str(), action_str)
+            }
+            Action::Window(win) => {
+                format!("Window: {:?}", win.command)
+            }
+            Action::Run(run) => {
+                format!("Run: {} {}", run.command, run.args.as_ref().unwrap_or(&"".to_string()))
+            }
+        }
+    }
+}
+
+impl MouseButton {
+    pub fn as_str(&self) -> &str {
+        match self {
+            MouseButton::Left => "Left",
+            MouseButton::Right => "Right",
+            MouseButton::Middle => "Middle",
+            MouseButton::X1 => "X1",
+            MouseButton::X2 => "X2",
+        }
+    }
+}
+
 /// Keyboard shortcut action
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyboardAction {

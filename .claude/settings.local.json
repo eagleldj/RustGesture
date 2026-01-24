@@ -16,7 +16,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(if not exist \"d:\\\\_src\\\\RustGesture\\\\target\\\\debug\" mkdir \"d:\\\\_src\\\\RustGesture\\\\target\\\\debug\")",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(powershell:*)"
     ]
   }
 }

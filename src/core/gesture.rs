@@ -55,6 +55,20 @@ impl GestureDir {
             _ => *self,
         }
     }
+
+    /// Get arrow emoji for this direction
+    pub fn arrow(&self) -> &str {
+        match self {
+            GestureDir::Up => "⬆️",
+            GestureDir::Down => "⬇️",
+            GestureDir::Left => "⬅️",
+            GestureDir::Right => "➡️",
+            GestureDir::UpLeft => "↖️",
+            GestureDir::UpRight => "↗️",
+            GestureDir::DownLeft => "↙️",
+            GestureDir::DownRight => "↘️",
+        }
+    }
 }
 
 /// Gesture modifier detected during gesture tracking
@@ -143,6 +157,23 @@ impl Gesture {
             })
             .collect::<Vec<_>>()
             .join(" → ")
+    }
+
+    /// Create a short display string with trigger button (e.g., "M ⬆️➡️⬇️")
+    pub fn short_display(&self) -> String {
+        let button = match self.trigger_button {
+            GestureTriggerButton::Right => "R",
+            GestureTriggerButton::Middle => "M",
+            GestureTriggerButton::X1 => "X1",
+            GestureTriggerButton::X2 => "X2",
+        };
+
+        let arrows: String = self.directions
+            .iter()
+            .map(|dir| dir.arrow())
+            .collect();
+
+        format!("{} {}", button, arrows)
     }
 }
 

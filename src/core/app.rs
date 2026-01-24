@@ -10,14 +10,17 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tracing::{debug, error, info, warn};
 
+// Make GestureApp safe to send across threads
+unsafe impl Send for GestureApp {}
+
 /// Gesture application
 pub struct GestureApp {
     config_manager: Mutex<ConfigManager>,
-    recognizer: SharedRecognizer,
+    pub recognizer: SharedRecognizer,
     intent_finder: Mutex<GestureIntentFinder>,
     executor: CommandExecutor,
     hook: Option<MouseHook>,
-    enabled: Arc<AtomicBool>,
+    pub enabled: Arc<AtomicBool>,
 }
 
 impl GestureApp {
@@ -54,32 +57,34 @@ impl GestureApp {
             recognizer.set_event_callback(move |event| {
                 match event {
                     GestureRecognizerEvent::GestureCompleted(gesture) => {
-                        info!("Gesture completed: {:?}", gesture);
+                        info!("✅ {}", gesture.short_display());
 
                         // Find matching intent
                         let finder = intent_finder_clone.lock().unwrap();
                         if let Some(intent) = finder.find(&gesture, None) {
-                            info!("Found matching action for gesture: {:?}", gesture);
+                            info!("🎯 {}", intent.action.display_info());
 
                             // Execute the action
                             if let Err(e) = executor_clone.execute(&intent.action) {
-                                error!("Failed to execute action: {:?}", e);
+                                error!("❌ Failed to execute action: {:?}", e);
+                            } else {
+                                info!("✓ Action executed successfully");
                             }
                         } else {
-                            warn!("No matching action found for gesture: {:?}", gesture);
+                            warn!("⚠️  No matching action found");
                         }
                     }
                     GestureRecognizerEvent::GestureCancelled => {
-                        debug!("Gesture cancelled");
+                        debug!("❌ Gesture cancelled");
                     }
                     GestureRecognizerEvent::GestureStarted(context) => {
-                        debug!("Gesture started at: ({}, {})", context.start_point.x, context.start_point.y);
+                        debug!("🎬 Gesture started at: ({}, {})", context.start_point.x, context.start_point.y);
                     }
                     GestureRecognizerEvent::GestureRecognized(gesture, _is_final) => {
-                        debug!("Gesture recognized: {:?}", gesture);
+                        debug!("🔍 Gesture recognized: {}", gesture.short_display());
                     }
                     GestureRecognizerEvent::ModifierDetected(modifier) => {
-                        debug!("Modifier detected: {:?}", modifier);
+                        debug!("🔧 Modifier detected: {:?}", modifier);
                     }
                 }
             });
@@ -88,17 +93,6 @@ impl GestureApp {
         // Create intent finder for the app struct
         let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
 
-        // Create and install mouse hook
-        let mut hook = MouseHook::new();
-        let callback = GestureHookCallback::new(
-            recognizer.clone(),
-            enabled.clone(),
-        );
-        hook.set_callback(Box::new(callback));
-
-        // Install the hook
-        hook.install()?;
-
         info!("RustGesture application initialized successfully");
 
         Ok(Self {
@@ -106,7 +100,7 @@ impl GestureApp {
             recognizer,
             intent_finder,
             executor,
-            hook: Some(hook),
+            hook: None,  // Hook will be created in message loop thread
             enabled,
         })
     }
@@ -180,6 +174,11 @@ impl GestureApp {
     /// Get the config manager
     pub fn config_manager(&self) -> &Mutex<ConfigManager> {
         &self.config_manager
+    }
+
+    /// Get config (convenience method)
+    pub fn config(&self) -> crate::config::config::GestureConfig {
+        self.config_manager.lock().unwrap().config().clone()
     }
 }
 

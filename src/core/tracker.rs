@@ -5,7 +5,7 @@
 use crate::core::gesture::{Gesture, GestureContext, GestureDir, GestureModifier, GestureTriggerButton, Point};
 use crate::config::config::Settings;
 use crate::winapi::hook::MouseEvent;
-use tracing::{debug, trace};
+use tracing::{debug, info, trace};
 use std::time::{Duration, Instant};
 
 /// Path tracker state
@@ -177,6 +177,7 @@ impl PathTracker {
                 let new_len = self.current_gesture.as_ref().unwrap().len();
 
                 if new_len != old_len {
+                    info!("➡️  Direction detected: {} ({:?})", dir.arrow(), dir);
                     debug!("Gesture direction added: {:?}", dir);
                     self.emit_event(TrackerEvent::GestureChanged(self.current_gesture.as_ref().unwrap().clone()));
                 }
