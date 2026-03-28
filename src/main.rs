@@ -29,7 +29,9 @@ async fn main() -> Result<()> {
     // Get config directory
     let config_dir = dirs::config_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("rustgesture");
+        .join("RustGesture");
+
+    let config_path = config_dir.join("config.json");
 
     info!("Config directory: {:?}", config_dir);
 
@@ -56,8 +58,28 @@ async fn main() -> Result<()> {
     let config_opt = gesture_app.as_ref().map(|app| app.config());
     let enabled_opt = gesture_app.as_ref().map(|app| app.enabled.clone());
 
+    // Channel to receive tray icon creation result and shutdown signal
+    let (tray_tx, tray_rx) = std::sync::mpsc::channel();
+    let (shutdown_tx, shutdown_rx) = std::sync::mpsc::channel::<()>();
+
+    let config_path_clone = config_path.clone();
     let _message_loop_handle = std::thread::spawn(move || {
         if let (Some(recognizer), Some(config), Some(enabled)) = (recognizer_opt, config_opt, enabled_opt) {
+            // Create system tray IN MESSAGE LOOP THREAD
+            info!("Initializing system tray in message loop thread...");
+            let tray = match ui::TrayIcon::new(enabled.clone(), shutdown_tx, config_path_clone) {
+                Ok(t) => {
+                    info!("System tray created successfully in message loop thread");
+                    let _ = tray_tx.send(Ok(()));
+                    Some(t)
+                }
+                Err(e) => {
+                    tracing::error!("Failed to create system tray: {:?}", e);
+                    let _ = tray_tx.send(Err(e));
+                    None
+                }
+            };
+
             // Create and install hook IN THIS THREAD
             use crate::winapi::hook::MouseHook;
             use crate::core::hook_callback::GestureHookCallback;
@@ -83,6 +105,8 @@ async fn main() -> Result<()> {
 
                 let mut msg = MSG::default();
                 // Message loop - this is required for hooks to work
+                // Keep tray alive in this scope so it doesn't get dropped
+                let _tray = tray;
                 while GetMessageW(&mut msg, HWND::default(), 0, 0).into() {
                     TranslateMessage(&msg);
                     DispatchMessageW(&msg);
@@ -93,9 +117,8 @@ async fn main() -> Result<()> {
 
     info!("Windows message loop started");
 
-    // Initialize system tray
-    info!("Initializing system tray...");
-    let _tray = ui::TrayIcon::new(enabled.clone())?;
+    // Wait for tray icon to be created
+    tray_rx.recv()??;
     info!("System tray initialized");
 
     info!("RustGesture started successfully");
@@ -142,6 +165,12 @@ async fn main() -> Result<()> {
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
             info!("Received Ctrl+C, shutting down...");
+        }
+        _ = async {
+            // Wait for shutdown signal from tray menu
+            let _ = shutdown_rx.recv();
+        } => {
+            info!("Received exit request from tray menu, shutting down...");
         }
     }
 

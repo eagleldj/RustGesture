@@ -1,0 +1,1113 @@
+warning: unused import: `error`
+ --> src\config\manager.rs:9:27
+  |
+9 | use tracing::{info, warn, error};
+  |                           ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::f32::consts::PI`
+ --> src\core\parser.rs:6:5
+  |
+6 | use std::f32::consts::PI;
+  |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `GestureDir`
+ --> src\core\tracker.rs:5:53
+  |
+5 | use crate::core::gesture::{Gesture, GestureContext, GestureDir, GestureModifier, GestureTriggerButton, Point};
+  |                                                     ^^^^^^^^^^
+
+warning: unused import: `trace`
+ --> src\core\tracker.rs:8:28
+  |
+8 | use tracing::{debug, info, trace};
+  |                            ^^^^^
+
+warning: unused import: `GestureDir`
+ --> src\core\recognizer.rs:7:37
+  |
+7 | use crate::core::gesture::{Gesture, GestureDir, GestureModifier, GestureTriggerButton};
+  |                                     ^^^^^^^^^^
+
+warning: unused imports: `calculate_4direction` and `calculate_8direction`
+ --> src\core\recognizer.rs:8:27
+  |
+8 | use crate::core::parser::{calculate_4direction, calculate_8direction};
+  |                           ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `debug`, `info`, and `warn`
+  --> src\core\recognizer.rs:12:15
+   |
+12 | use tracing::{debug, info, warn};
+   |               ^^^^^  ^^^^  ^^^^
+
+warning: unused import: `config::GestureConfig`
+ --> src\core\app.rs:5:21
+  |
+5 | use crate::config::{config::GestureConfig, manager::ConfigManager};
+  |                     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::core::hook_callback::GestureHookCallback`
+ --> src\core\app.rs:7:5
+  |
+7 | use crate::core::hook_callback::GestureHookCallback;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Ordering`
+  --> src\core\app.rs:10:37
+   |
+10 | use std::sync::atomic::{AtomicBool, Ordering};
+   |                                     ^^^^^^^^
+
+warning: unused import: `windows::Win32::Foundation::*`
+ --> src\core\hook_callback.rs:5:5
+  |
+5 | use windows::Win32::Foundation::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `windows::Win32::UI::Input::KeyboardAndMouse::*`
+ --> src\core\hook_callback.rs:6:5
+  |
+6 | use windows::Win32::UI::Input::KeyboardAndMouse::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `windows::Win32::UI::WindowsAndMessaging::*`
+ --> src\core\hook_callback.rs:7:5
+  |
+7 | use windows::Win32::UI::WindowsAndMessaging::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Mutex`
+ --> src\core\hook_callback.rs:8:22
+  |
+8 | use std::sync::{Arc, Mutex};
+  |                      ^^^^^
+
+warning: unused import: `warn`
+  --> src\core\hook_callback.rs:10:28
+   |
+10 | use tracing::{debug, info, warn};
+   |                            ^^^^
+
+warning: unused import: `windows::Win32::UI::Input::KeyboardAndMouse::*`
+ --> src\winapi\hook.rs:6:5
+  |
+6 | use windows::Win32::UI::Input::KeyboardAndMouse::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src\winapi\hook.rs:10:5
+   |
+10 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `GestureTriggerButton` and `Point`
+  --> src\winapi\hook.rs:14:28
+   |
+14 | use crate::core::gesture::{GestureTriggerButton, Point};
+   |                            ^^^^^^^^^^^^^^^^^^^^  ^^^^^
+
+warning: unused import: `anyhow::anyhow`
+ --> src\winapi\message_loop.rs:9:5
+  |
+9 | use anyhow::anyhow;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `intent_finder`
+  --> src\core\app.rs:39:13
+   |
+39 |         let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
+   |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_intent_finder`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `hook_tx`
+  --> src\winapi\message_loop.rs:33:14
+   |
+33 |         let (hook_tx, hook_rx) = std::sync::mpsc::channel();
+   |              ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hook_tx`
+
+warning: function `get_angle` is never used
+  --> src\core\parser.rs:86:4
+   |
+86 | fn get_angle(vector_a: &Point, vector_b: &Point) -> f32 {
+   |    ^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `recognizer` is never read
+  --> src\core\hook_callback.rs:19:5
+   |
+18 | pub struct GestureHookCallback {
+   |            ------------------- field in this struct
+19 |     recognizer: SharedRecognizer,
+   |     ^^^^^^^^^^
+
+warning: unused `BOOL` that must be used
+   --> src\winapi\input.rs:252:21
+    |
+252 |                     ShowWindow(hwnd, SW_SHOWMINIMIZED);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+252 |                     let _ = ShowWindow(hwnd, SW_SHOWMINIMIZED);
+    |                     +++++++
+
+warning: unused `BOOL` that must be used
+   --> src\winapi\input.rs:256:21
+    |
+256 |                     ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+256 |                     let _ = ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    |                     +++++++
+
+warning: unused `BOOL` that must be used
+   --> src\winapi\input.rs:260:21
+    |
+260 |                     ShowWindow(hwnd, SW_RESTORE);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+260 |                     let _ = ShowWindow(hwnd, SW_RESTORE);
+    |                     +++++++
+
+warning: `rustgesture` (lib) generated 26 warnings (run `cargo fix --lib -p rustgesture` to apply 21 suggestions)
+warning: unused import: `windows::core::s`
+  --> src\ui\tray.rs:11:5
+   |
+11 | use windows::core::s;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `error`
+  --> src\ui\tray.rs:13:27
+   |
+13 | use tracing::{info, warn, error};
+   |                           ^^^^^
+
+warning: unused import: `std::ptr`
+  --> src\ui\tray.rs:16:5
+   |
+16 | use std::ptr;
+   |     ^^^^^^^^
+
+warning: unused imports: `debug` and `warn`
+ --> src\main.rs:7:28
+  |
+7 | use tracing::{info, error, warn, debug};
+  |                            ^^^^  ^^^^^
+
+warning: unused import: `Mutex`
+ --> src\main.rs:9:22
+  |
+9 | use std::sync::{Arc, Mutex};
+  |                      ^^^^^
+
+warning: unused import: `std::thread`
+  --> src\main.rs:12:5
+   |
+12 | use std::thread;
+   |     ^^^^^^^^^^^
+
+warning: enum `GestureDir` is never used
+  --> src\config\config.rs:10:10
+   |
+10 | pub enum GestureDir {
+   |          ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `as_str` is never used
+  --> src\config\config.rs:24:12
+   |
+22 | impl GestureDir {
+   | --------------- method in this implementation
+23 |     /// Convert to display name
+24 |     pub fn as_str(&self) -> &'static str {
+   |            ^^^^^^
+
+warning: enum `GestureModifier` is never used
+  --> src\config\config.rs:41:10
+   |
+41 | pub enum GestureModifier {
+   |          ^^^^^^^^^^^^^^^
+
+warning: struct `Gesture` is never constructed
+  --> src\config\config.rs:53:12
+   |
+53 | pub struct Gesture {
+   |            ^^^^^^^
+
+warning: associated items `new`, `with_modifier`, `is_empty`, and `len` are never used
+  --> src\config\config.rs:60:12
+   |
+58 | impl Gesture {
+   | ------------ associated items in this implementation
+59 |     /// Create a new gesture from directions
+60 |     pub fn new(directions: Vec<GestureDir>) -> Self {
+   |            ^^^
+...
+68 |     pub fn with_modifier(mut self, modifier: GestureModifier) -> Self {
+   |            ^^^^^^^^^^^^^
+...
+74 |     pub fn is_empty(&self) -> bool {
+   |            ^^^^^^^^
+...
+79 |     pub fn len(&self) -> usize {
+   |            ^^^
+
+warning: fields `config_path` and `backup_path` are never read
+  --> src\config\manager.rs:16:5
+   |
+15 | pub struct ConfigManager {
+   |            ------------- fields in this struct
+16 |     config_path: PathBuf,
+   |     ^^^^^^^^^^^
+17 |     backup_path: PathBuf,
+   |     ^^^^^^^^^^^
+
+warning: methods `config_mut`, `save`, and `reload` are never used
+   --> src\config\manager.rs:108:12
+    |
+ 21 | impl ConfigManager {
+    | ------------------ methods in this implementation
+...
+108 |     pub fn config_mut(&mut self) -> &mut GestureConfig {
+    |            ^^^^^^^^^^
+...
+113 |     pub fn save(&self) -> Result<()> {
+    |            ^^^^
+...
+118 |     pub fn reload(&mut self) -> Result<()> {
+    |            ^^^^^^
+
+warning: methods `is_diagonal` and `to_cardinal` are never used
+  --> src\core\gesture.rs:43:12
+   |
+41 | impl GestureDir {
+   | --------------- methods in this implementation
+42 |     /// Check if this is a diagonal direction
+43 |     pub fn is_diagonal(&self) -> bool {
+   |            ^^^^^^^^^^^
+...
+51 |     pub fn to_cardinal(&self) -> GestureDir {
+   |            ^^^^^^^^^^^
+
+warning: method `is_scroll` is never used
+  --> src\core\gesture.rs:88:12
+   |
+86 | impl GestureModifier {
+   | -------------------- method in this implementation
+87 |     /// Check if this modifier is a scroll wheel modifier
+88 |     pub fn is_scroll(&self) -> bool {
+   |            ^^^^^^^^^
+
+warning: methods `is_empty` and `last` are never used
+   --> src\core\gesture.rs:132:12
+    |
+106 | impl Gesture {
+    | ------------ methods in this implementation
+...
+132 |     pub fn is_empty(&self) -> bool {
+    |            ^^^^^^^^
+...
+142 |     pub fn last(&self) -> Option<&GestureDir> {
+    |            ^^^^
+
+warning: fields `current_point`, `window_handle`, `process_id`, and `is_fullscreen` are never read
+   --> src\core\gesture.rs:223:9
+    |
+218 | pub struct GestureContext {
+    |            -------------- fields in this struct
+...
+223 |     pub current_point: Point,
+    |         ^^^^^^^^^^^^^
+...
+226 |     pub window_handle: Option<isize>,
+    |         ^^^^^^^^^^^^^
+...
+229 |     pub process_id: Option<u32>,
+    |         ^^^^^^^^^^
+...
+232 |     pub is_fullscreen: bool,
+    |         ^^^^^^^^^^^^^
+    |
+    = note: `GestureContext` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `get_angle` is never used
+  --> src\core\parser.rs:86:4
+   |
+86 | fn get_angle(vector_a: &Point, vector_b: &Point) -> f32 {
+   |    ^^^^^^^^^
+
+warning: methods `check_timeout`, `state`, and `current_gesture` are never used
+   --> src\core\tracker.rs:239:12
+    |
+ 47 | impl PathTracker {
+    | ---------------- methods in this implementation
+...
+239 |     pub fn check_timeout(&mut self) -> bool {
+    |            ^^^^^^^^^^^^^
+...
+275 |     pub fn state(&self) -> &TrackerState {
+    |            ^^^^^
+...
+280 |     pub fn current_gesture(&self) -> Option<&Gesture> {
+    |            ^^^^^^^^^^^^^^^
+
+warning: field `max_gesture_steps` is never read
+  --> src\core\recognizer.rs:18:5
+   |
+15 | pub struct GestureRecognizer {
+   |            ----------------- field in this struct
+...
+18 |     max_gesture_steps: usize,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: methods `set_max_gesture_steps`, `check_timeout`, `state`, `current_gesture`, `is_tracking`, and `is_capturing` are never used
+   --> src\core\recognizer.rs:44:12
+    |
+ 21 | impl GestureRecognizer {
+    | ---------------------- methods in this implementation
+...
+ 44 |     pub fn set_max_gesture_steps(&mut self, max: usize) {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+...
+ 91 |     pub fn check_timeout(&mut self) -> bool {
+    |            ^^^^^^^^^^^^^
+...
+ 96 |     pub fn state(&self) -> &TrackerState {
+    |            ^^^^^
+...
+101 |     pub fn current_gesture(&self) -> Option<&Gesture> {
+    |            ^^^^^^^^^^^^^^^
+...
+106 |     pub fn is_tracking(&self) -> bool {
+    |            ^^^^^^^^^^^
+...
+111 |     pub fn is_capturing(&self) -> bool {
+    |            ^^^^^^^^^^^^
+
+warning: field `gesture` is never read
+  --> src\core\intent.rs:13:9
+   |
+12 | pub struct GestureIntent {
+   |            ------------- field in this struct
+13 |     pub gesture: Gesture,
+   |         ^^^^^^^
+   |
+   = note: `GestureIntent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `can_execute_on_modifier` is never used
+  --> src\core\intent.rs:19:12
+   |
+17 | impl GestureIntent {
+   | ------------------ method in this implementation
+18 |     /// Check if this intent can be executed during the gesture (e.g., scroll wheel)
+19 |     pub fn can_execute_on_modifier(&self) -> bool {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `config` is never read
+  --> src\core\intent.rs:28:5
+   |
+27 | pub struct GestureIntentFinder {
+   |            ------------------- field in this struct
+28 |     config: GestureConfig,
+   |     ^^^^^^
+
+warning: associated items `update_config`, `find_with_modifiers`, `is_gesturing_enabled`, `gesture_to_string_with_modifiers`, `get_action`, and `config` are never used
+   --> src\core\intent.rs:83:12
+    |
+ 35 | impl GestureIntentFinder {
+    | ------------------------ associated items in this implementation
+...
+ 83 |     pub fn update_config(&mut self, config: GestureConfig) {
+    |            ^^^^^^^^^^^^^
+...
+122 |     pub fn find_with_modifiers(
+    |            ^^^^^^^^^^^^^^^^^^^
+...
+158 |     pub fn is_gesturing_enabled(&self, app_name: Option<&str>) -> bool {
+    |            ^^^^^^^^^^^^^^^^^^^^
+...
+190 |     fn gesture_to_string_with_modifiers(gesture: &Gesture) -> String {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+214 |     pub fn get_action(&self, gesture_str: &str, app_name: Option<&str>) -> Option<&Action> {
+    |            ^^^^^^^^^^
+...
+229 |     pub fn config(&self) -> &GestureConfig {
+    |            ^^^^^^
+
+warning: method `execute_by_name` is never used
+  --> src\core\executor.rs:47:12
+   |
+16 | impl CommandExecutor {
+   | -------------------- method in this implementation
+...
+47 |     pub fn execute_by_name(&self, name: &str) -> Result<()> {
+   |            ^^^^^^^^^^^^^^^
+
+warning: fields `intent_finder` and `executor` are never read
+  --> src\core\app.rs:20:5
+   |
+17 | pub struct GestureApp {
+   |            ---------- fields in this struct
+...
+20 |     intent_finder: Mutex<GestureIntentFinder>,
+   |     ^^^^^^^^^^^^^
+21 |     executor: CommandExecutor,
+   |     ^^^^^^^^
+
+warning: methods `start`, `stop`, `handle_gesture`, `reload_config`, and `config_manager` are never used
+   --> src\core\app.rs:109:12
+    |
+ 26 | impl GestureApp {
+    | --------------- methods in this implementation
+...
+109 |     pub fn start(&self) -> anyhow::Result<()> {
+    |            ^^^^^
+...
+121 |     pub fn stop(&self) -> anyhow::Result<()> {
+    |            ^^^^
+...
+132 |     pub fn handle_gesture(&self, gesture: &Gesture) -> anyhow::Result<()> {
+    |            ^^^^^^^^^^^^^^
+...
+153 |     pub fn reload_config(&self) -> anyhow::Result<()> {
+    |            ^^^^^^^^^^^^^
+...
+175 |     pub fn config_manager(&self) -> &Mutex<ConfigManager> {
+    |            ^^^^^^^^^^^^^^
+
+warning: function `get_dpi` is never used
+  --> src\winapi\helpers.rs:13:8
+   |
+13 | pub fn get_dpi() -> u32 {
+   |        ^^^^^^^
+
+warning: function `get_dpi_scaling` is never used
+  --> src\winapi\helpers.rs:28:8
+   |
+28 | pub fn get_dpi_scaling() -> f64 {
+   |        ^^^^^^^^^^^^^^^
+
+warning: function `get_foreground_window` is never used
+  --> src\winapi\helpers.rs:33:8
+   |
+33 | pub fn get_foreground_window() -> Option<HWND> {
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `get_window_rect` is never used
+  --> src\winapi\helpers.rs:43:8
+   |
+43 | pub fn get_window_rect(hwnd: HWND) -> Option<RECT> {
+   |        ^^^^^^^^^^^^^^^
+
+warning: function `get_desktop_window` is never used
+  --> src\winapi\helpers.rs:55:8
+   |
+55 | pub fn get_desktop_window() -> HWND {
+   |        ^^^^^^^^^^^^^^^^^^
+
+warning: function `get_window_process_id` is never used
+  --> src\winapi\helpers.rs:60:8
+   |
+60 | pub fn get_window_process_id(hwnd: HWND) -> Option<u32> {
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `is_fullscreen` is never used
+  --> src\winapi\helpers.rs:73:8
+   |
+73 | pub fn is_fullscreen(hwnd: HWND) -> bool {
+   |        ^^^^^^^^^^^^^
+
+warning: function `get_active_window_info` is never used
+   --> src\winapi\helpers.rs:110:8
+    |
+110 | pub fn get_active_window_info() -> Option<(HWND, u32)> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `window_from_point` is never used
+   --> src\winapi\helpers.rs:117:8
+    |
+117 | pub fn window_from_point(point: &Point) -> Option<HWND> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `get_process_name` is never used
+   --> src\winapi\helpers.rs:136:8
+    |
+136 | pub fn get_process_name(_process_id: u32) -> Option<String> {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: function `is_key_down` is never used
+   --> src\winapi\helpers.rs:143:8
+    |
+143 | pub fn is_key_down(vkey: VIRTUAL_KEY) -> bool {
+    |        ^^^^^^^^^^^
+
+warning: function `is_mouse_button_swapped` is never used
+   --> src\winapi\helpers.rs:151:8
+    |
+151 | pub fn is_mouse_button_swapped() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `get_hook_stats` is never used
+  --> src\winapi\hook.rs:30:8
+   |
+30 | pub fn get_hook_stats() -> (u64, u64) {
+   |        ^^^^^^^^^^^^^^
+
+warning: fields `0` and `1` are never read
+  --> src\winapi\hook.rs:50:18
+   |
+50 |     LeftButtonUp(i32, i32),
+   |     ------------ ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+50 -     LeftButtonUp(i32, i32),
+50 +     LeftButtonUp((), ()),
+   |
+
+warning: fields `0` and `1` are never read
+  --> src\winapi\hook.rs:52:19
+   |
+52 |     RightButtonUp(i32, i32),
+   |     ------------- ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+52 -     RightButtonUp(i32, i32),
+52 +     RightButtonUp((), ()),
+   |
+
+warning: fields `0` and `1` are never read
+  --> src\winapi\hook.rs:54:20
+   |
+54 |     MiddleButtonUp(i32, i32),
+   |     -------------- ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+54 -     MiddleButtonUp(i32, i32),
+54 +     MiddleButtonUp((), ()),
+   |
+
+warning: fields `0` and `1` are never read
+  --> src\winapi\hook.rs:56:15
+   |
+56 |     XButtonUp(i32, i32, u16),
+   |     --------- ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+56 -     XButtonUp(i32, i32, u16),
+56 +     XButtonUp((), (), u16),
+   |
+
+warning: fields `0` and `1` are never read
+  --> src\winapi\hook.rs:57:16
+   |
+57 |     MouseWheel(i32, i32, i32), // x, y, delta
+   |     ---------- ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+57 -     MouseWheel(i32, i32, i32), // x, y, delta
+57 +     MouseWheel((), (), i32), // x, y, delta
+   |
+
+warning: fields `0`, `1`, and `2` are never read
+  --> src\winapi\hook.rs:58:17
+   |
+58 |     MouseHWheel(i32, i32, i32),
+   |     ----------- ^^^  ^^^  ^^^
+   |     |
+   |     fields in this variant
+   |
+   = note: `MouseEvent` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+   |
+58 -     MouseHWheel(i32, i32, i32),
+58 +     MouseHWheel((), (), ()),
+   |
+
+warning: method `position` is never used
+  --> src\winapi\hook.rs:63:12
+   |
+61 | impl MouseEvent {
+   | --------------- method in this implementation
+62 |     /// Get the position of the mouse event
+63 |     pub fn position(&self) -> (i32, i32) {
+   |            ^^^^^^^^
+
+warning: enum `HookMessage` is never used
+  --> src\winapi\message_loop.rs:13:10
+   |
+13 | pub enum HookMessage {
+   |          ^^^^^^^^^^^
+
+warning: struct `MessageLoop` is never constructed
+  --> src\winapi\message_loop.rs:23:12
+   |
+23 | pub struct MessageLoop {
+   |            ^^^^^^^^^^^
+
+warning: associated items `new`, `run`, and `stop` are never used
+  --> src\winapi\message_loop.rs:29:12
+   |
+27 | impl MessageLoop {
+   | ---------------- associated items in this implementation
+28 |     /// Create a new message loop
+29 |     pub fn new() -> anyhow::Result<(Self, std::sync::mpsc::Receiver<HookMessage>)> {
+   |            ^^^
+...
+46 |     pub fn run(&mut self) -> anyhow::Result<()> {
+   |            ^^^
+...
+53 |     pub fn stop(&self) {
+   |            ^^^^
+
+warning: unused `BOOL` that must be used
+   --> src\main.rs:107:21
+    |
+107 |                     TranslateMessage(&msg);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+107 |                     let _ = TranslateMessage(&msg);
+    |                     +++++++
+
+warning: unused `BOOL` that must be used
+   --> src\winapi\input.rs:252:21
+    |
+252 |                     ShowWindow(hwnd, SW_SHOWMINIMIZED);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+252 |                     let _ = ShowWindow(hwnd, SW_SHOWMINIMIZED);
+    |                     +++++++
+
+warning: unused `Result` that must be used
+   --> src\ui\tray.rs:180:9
+    |
+180 |         GetCursorPos(&mut point);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+180 |         let _ = GetCursorPos(&mut point);
+    |         +++++++
+
+warning: unused `Result` that must be used
+   --> src\ui\tray.rs:187:9
+    |
+187 |         AppendMenuW(hmenu, MF_STRING, 1, PCWSTR(w!("Enable Gesture Recognition\0Toggle gesture tracking").as_ptr()));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+187 |         let _ = AppendMenuW(hmenu, MF_STRING, 1, PCWSTR(w!("Enable Gesture Recognition\0Toggle gesture tracking").as_ptr()));
+    |         +++++++
+
+warning: unused `Result` that must be used
+   --> src\ui\tray.rs:188:9
+    |
+188 |         AppendMenuW(hmenu, MF_STRING, 2, PCWSTR(w!("Exit\0Close RustGesture").as_ptr()));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+188 |         let _ = AppendMenuW(hmenu, MF_STRING, 2, PCWSTR(w!("Exit\0Close RustGesture").as_ptr()));
+    |         +++++++
+
+warning: unused `BOOL` that must be used
+   --> src\ui\tray.rs:194:9
+    |
+194 |         EnableMenuItem(hmenu, 1, MF_ENABLED);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+194 |         let _ = EnableMenuItem(hmenu, 1, MF_ENABLED);
+    |         +++++++
+
+warning: unused `BOOL` that must be used
+   --> src\ui\tray.rs:195:9
+    |
+195 |         EnableMenuItem(hmenu, 2, MF_ENABLED);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+195 |         let _ = EnableMenuItem(hmenu, 2, MF_ENABLED);
+    |         +++++++
+
+warning: unused `Result` that must be used
+   --> src\ui\tray.rs:208:9
+    |
+208 |         DestroyMenu(hmenu);
+    |         ^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+208 |         let _ = DestroyMenu(hmenu);
+    |         +++++++
+
+warning: unused `Result` that must be used
+   --> src\ui\tray.rs:326:21
+    |
+326 |                     DestroyWindow(self.hwnd);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+326 |                     let _ = DestroyWindow(self.hwnd);
+    |                     +++++++
+
+warning: `rustgesture` (bin "rustgesture") generated 84 warnings (24 duplicates) (run `cargo fix --bin "rustgesture" -p rustgesture` to apply 6 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.24s
+     Running `target\debug\rustgesture.exe`
+[2m2026-01-25T08:38:40.480490Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m RustGesture v0.1.0 starting...
+[2m2026-01-25T08:38:40.485656Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Config directory: "C:\\Users\\Administrator\\AppData\\Roaming\\rustgesture"
+[2m2026-01-25T08:38:40.485714Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Initializing gesture application...
+[2m2026-01-25T08:38:40.485738Z[0m [32m INFO[0m [2mrustgesture::core::app[0m[2m:[0m Initializing RustGesture application...
+[2m2026-01-25T08:38:40.486236Z[0m [32m INFO[0m [2mrustgesture::config::manager[0m[2m:[0m Loading configuration from: "C:\\Users\\Administrator\\AppData\\Roaming\\RustGesture\\config.json"
+[2m2026-01-25T08:38:40.486688Z[0m [32m INFO[0m [2mrustgesture::config::manager[0m[2m:[0m Configuration loaded successfully
+[2m2026-01-25T08:38:40.486738Z[0m [32m INFO[0m [2mrustgesture::core::intent[0m[2m:[0m GestureIntentFinder created with 3 global gestures and 0 app-specific configs
+[2m2026-01-25T08:38:40.486767Z[0m [32m INFO[0m [2mrustgesture::core::intent[0m[2m:[0m GestureIntentFinder created with 3 global gestures and 0 app-specific configs
+[2m2026-01-25T08:38:40.486790Z[0m [32m INFO[0m [2mrustgesture::core::intent[0m[2m:[0m GestureIntentFinder created with 3 global gestures and 0 app-specific configs
+[2m2026-01-25T08:38:40.486805Z[0m [32m INFO[0m [2mrustgesture::core::app[0m[2m:[0m RustGesture application initialized successfully
+[2m2026-01-25T08:38:40.486825Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Gesture application initialized
+[2m2026-01-25T08:38:40.486835Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Starting Windows message loop...
+[2m2026-01-25T08:38:40.486983Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Windows message loop started
+[2m2026-01-25T08:38:40.487525Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Initializing system tray in message loop thread...
+[2m2026-01-25T08:38:40.487609Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Creating system tray icon with context menu
+[2m2026-01-25T08:38:40.492391Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Created tray window: HWND(0x1e31070)
+[2m2026-01-25T08:38:40.492500Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m ✅ System icon loaded successfully: HICON(0x1002b)
+[2m2026-01-25T08:38:40.492523Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Adding tray icon to notification area...
+[2m2026-01-25T08:38:40.500221Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m ✅ System tray icon added successfully
+[2m2026-01-25T08:38:40.500272Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m System tray created successfully in message loop thread
+[2m2026-01-25T08:38:40.500440Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m GestureHookCallback created with multi-button support (Right/Middle/X1/X2)
+[2m2026-01-25T08:38:40.500666Z[0m [32m INFO[0m [2mrustgesture::winapi::hook[0m[2m:[0m Installing mouse hook with HINSTANCE: HMODULE(0x7ff7c1a80000)
+[2m2026-01-25T08:38:40.501669Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m System tray initialized
+[2m2026-01-25T08:38:40.501728Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m RustGesture started successfully
+[2m2026-01-25T08:38:40.501741Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Gesture recognition is enabled
+[2m2026-01-25T08:38:40.501751Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Multi-button support enabled: Right, Middle, X1, X2
+[2m2026-01-25T08:38:40.502743Z[0m [32m INFO[0m [2mrustgesture::winapi::hook[0m[2m:[0m Mouse hook installed successfully: HHOOK(0x33b0f3d)
+[2m2026-01-25T08:38:40.502783Z[0m [32m INFO[0m [2mrustgesture[0m[2m:[0m Mouse hook installed in message loop thread
+[2m2026-01-25T08:38:40.505047Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m Event processing thread started
+[2m2026-01-25T08:39:12.703438Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.703470Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.703771Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.703793Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.704421Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.704437Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.705446Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.705463Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.706384Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.706400Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.707419Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.707436Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.708402Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.708418Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.709375Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.709390Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.710472Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.710492Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.711423Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.711437Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.712420Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.712437Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.713446Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.713465Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.715941Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.715984Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.718451Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.718485Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.719576Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.719597Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.720721Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.720744Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.721447Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.721463Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.722761Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.722789Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.724833Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.724861Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.725578Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.725597Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.727893Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.727919Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.728561Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.728576Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.730479Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.730502Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.731780Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.731834Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.735706Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.735739Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.736458Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.736483Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.737653Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.737682Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.740939Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.740968Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.744181Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.744210Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.746843Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.746871Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.750085Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.750124Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.751668Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.751697Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.752800Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.752830Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.757222Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.757253Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.760148Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.760176Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.773654Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.773687Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.826466Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.826496Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.835710Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.835740Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.836958Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.837085Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.840751Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.840783Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.842957Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.842985Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.844833Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.844866Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.845984Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.846039Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.852286Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.852317Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.853339Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.853366Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.854559Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.854590Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.855219Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.855246Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.857879Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.857908Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.861926Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.861958Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.868314Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.868345Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.874399Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.874429Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.951701Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.951733Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.956900Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.956930Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.961084Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.961115Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.964226Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.964258Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.967825Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.967857Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.970224Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.970258Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.971750Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.971772Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.973719Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.973744Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.977336Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.977365Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.979618Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.979640Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.982359Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.982397Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.985527Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.985558Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.986886Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.986908Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.988555Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.988575Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:12.991807Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:12.991834Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:13.489880Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m 🖱️  Right button DOWN at (3272, 1876)
+[2m2026-01-25T08:39:13.649460Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m 🖱️  Right button UP
+[2m2026-01-25T08:39:15.011333Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.011366Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.020333Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.020365Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.041330Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.041359Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.045626Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.045657Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.070278Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.070309Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.071364Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.071383Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.081087Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.081122Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.109373Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.109405Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.171495Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.171527Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.179251Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.179282Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.212388Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.212421Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.245749Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m 🖱️  Right button DOWN at (3345, 1872)
+[2m2026-01-25T08:39:15.419906Z[0m [32m INFO[0m [2mrustgesture::core::hook_callback[0m[2m:[0m 🖱️  Right button UP
+[2m2026-01-25T08:39:15.421782Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=516
+[2m2026-01-25T08:39:15.421812Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 516
+[2m2026-01-25T08:39:15.421835Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=517
+[2m2026-01-25T08:39:15.421857Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🖱️  Tray icon right-clicked (WM_RBUTTONUP) - showing context menu
+[2m2026-01-25T08:39:15.677279Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.677311Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.679428Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.679456Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.680314Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.680335Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.685163Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.685192Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.686450Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.686477Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.693319Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.693349Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.697283Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.697314Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.702390Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.702425Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.703276Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.703302Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.705479Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.705509Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.708967Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.708999Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.713728Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.713761Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.747327Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.747365Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:15.817337Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:15.817384Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.030284Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.030318Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.036757Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.036795Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.037859Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.037900Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.048306Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.048388Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.061146Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.061182Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.073331Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.073368Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.080361Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.080396Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.085296Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.085332Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.093915Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.093955Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.111101Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.111134Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.354449Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=513
+[2m2026-01-25T08:39:16.354486Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 513
+[2m2026-01-25T08:39:16.354500Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=514
+[2m2026-01-25T08:39:16.354509Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 514
+[2m2026-01-25T08:39:16.441354Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.441388Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.443302Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.443336Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.445257Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.445294Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.447346Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.447408Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.452789Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.452829Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.454234Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.454272Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.454886Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.454910Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.455501Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.455524Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.457421Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.457463Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.459045Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.459080Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.460220Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.460267Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.460822Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.460846Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.462435Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.462482Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.464920Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.464989Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.469663Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.469706Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.471292Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.471338Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.472698Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.472745Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.474801Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.474838Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.476655Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.476692Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.478415Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.478451Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.480322Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.480360Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.482178Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.482246Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.487001Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.487047Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.487944Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.487977Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.489331Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.489366Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.490635Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.490670Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.492426Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.492461Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.493358Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.493384Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.494269Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.494305Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.496406Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.496457Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.501589Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.501640Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:16.502635Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 📨 Tray icon message received: event=512
+[2m2026-01-25T08:39:16.502681Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m 🔔 Unknown tray icon event: 512
+[2m2026-01-25T08:39:17.260350Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Exit requested from tray menu
+[2m2026-01-25T08:39:17.260608Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Removing system tray icon
+[2m2026-01-25T08:39:17.263422Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m System tray icon removed
+[2m2026-01-25T08:39:17.265369Z[0m [32m INFO[0m [2mrustgesture::ui::tray[0m[2m:[0m Removing system tray icon
+[2m2026-01-25T08:39:17.268630Z[0m [33m WARN[0m [2mrustgesture::ui::tray[0m[2m:[0m Failed to remove system tray icon
+error: process didn't exit successfully: `target\debug\rustgesture.exe` (exit code: 0xffffffff)

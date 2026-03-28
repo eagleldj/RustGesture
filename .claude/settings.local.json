@@ -17,7 +17,22 @@
       "Bash(git commit:*)",
       "Bash(if not exist \"d:\\\\_src\\\\RustGesture\\\\target\\\\debug\" mkdir \"d:\\\\_src\\\\RustGesture\\\\target\\\\debug\")",
       "Bash(timeout:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(cargo doc:*)",
+      "Bash(taskkill:*)",
+      "Bash(pslist:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(tee:*)",
+      "Bash(ls -1 ~/.claude/agents/engineering/*.md)",
+      "Bash(cmd //c \"taskkill /F /IM rustgesture.exe\")",
+      "Bash(cmd //c \"echo %APPDATA%\")",
+      "Bash(cmd //c \"start /B target\\\\debug\\\\rustgesture.exe\")",
+      "Bash(cmd //c \"start /B target\\\\debug\\\\rustgesture.exe > nul 2>&1\" sleep 3 tasklist)",
+      "Bash(cmd //c \"del \\\\\\\\.\\\\D:\\\\_src\\\\RustGesture\\\\nul\")",
+      "Bash(cmd //c \"dir D:\\\\_src\\\\RustGesture\\\\nul*\")"
     ]
   }
 }

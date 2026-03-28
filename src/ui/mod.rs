@@ -6,9 +6,7 @@
 //! - Notifications
 
 pub mod tray;
+pub mod config_dialog;
 
 pub use tray::TrayIcon;
-
-// TODO: Implement these modules
-// pub mod settings;
-// pub mod notifications;
+pub use config_dialog::ConfigDialog;
