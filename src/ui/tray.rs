@@ -232,10 +232,10 @@ impl TrayIcon {
             self.toggle();
             info!("Gesture recognition {}", if (*self.enabled_ptr).load(Ordering::SeqCst) { "enabled" } else { "disabled" });
         } else if result.0 == 3 {
-            // Settings
+            // Settings - show() is non-blocking (sends to persistent UI thread)
             info!("Opening config dialog from menu");
             let dialog = ConfigDialog::new(self.config_path.clone());
-            dialog.show(Some(self.hwnd));
+            dialog.show(None);
         } else if result.0 == 2 {
             // Exit
             info!("Exit requested from tray menu");
@@ -269,7 +269,7 @@ impl TrayIcon {
                         if !user_data_ptr.is_null() {
                             let user_data = &*user_data_ptr;
                             let dialog = ConfigDialog::new(user_data.config_path.clone());
-                            dialog.show(Some(hwnd));
+                            dialog.show(None);
                         }
                     }
                     WM_RBUTTONUP => {
