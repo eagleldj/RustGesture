@@ -19,8 +19,8 @@ export struct AppItem {
 export struct GestureItem {
     name: string,
     mnemonic: string,
-    action-description: string,
     action-type: string,
+    action-params: string,
 }
 
 // Helper component: clickable sidebar app row with hover effect
@@ -46,7 +46,7 @@ component AppRow inherits Rectangle {
         padding-right: 8px;
         spacing: 6px;
 
-        // Selection indicator bar (wrapper stretches to full height, inner bar centered)
+        // Selection indicator bar
         Rectangle {
             width: 3px;
 
@@ -59,7 +59,7 @@ component AppRow inherits Rectangle {
             }
         }
 
-        // App icon placeholder (wrapper stretches to full height, inner icon centered)
+        // App icon placeholder
         Rectangle {
             width: 18px;
 
@@ -82,7 +82,7 @@ component AppRow inherits Rectangle {
             }
         }
 
-        // App name text (stretches to full height, text centered via vertical-alignment)
+        // App name text
         Text {
             text: root.display-name;
             font-size: 12px;
@@ -100,13 +100,90 @@ component AppRow inherits Rectangle {
     }
 }
 
-// Helper component: clickable gesture table row with hover and highlight
+// Table header row for gesture list
+component TableHeader inherits Rectangle {
+    width: 100%;
+    height: 30px;
+    background: #f0f0f0;
+
+    // Bottom border
+    Rectangle {
+        y: parent.height - 1px;
+        width: 100%;
+        height: 1px;
+        background: #d0d0d0;
+    }
+
+    HorizontalLayout {
+        width: 100%;
+        height: 100%;
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 0px;
+
+        // 手势名称
+        HorizontalLayout {
+            horizontal-stretch: 2;
+            spacing: 0px;
+            Text {
+                text: "手势名称";
+                font-size: 11px;
+                font-weight: 700;
+                color: #666666;
+                vertical-alignment: center;
+            }
+        }
+
+        // 手势序列
+        HorizontalLayout {
+            horizontal-stretch: 1;
+            spacing: 0px;
+            Text {
+                text: "手势序列";
+                font-size: 11px;
+                font-weight: 700;
+                color: #666666;
+                vertical-alignment: center;
+            }
+        }
+
+        // 操作类型
+        HorizontalLayout {
+            horizontal-stretch: 2;
+            spacing: 0px;
+            Text {
+                text: "操作类型";
+                font-size: 11px;
+                font-weight: 700;
+                color: #666666;
+                vertical-alignment: center;
+            }
+        }
+
+        // 参数
+        HorizontalLayout {
+            horizontal-stretch: 5;
+            spacing: 0px;
+            Text {
+                text: "参数";
+                font-size: 11px;
+                font-weight: 700;
+                color: #666666;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
+// Gesture row: 4-column table layout
 component GestureRow inherits Rectangle {
-    height: 32px;
+    width: 100%;
+    height: 36px;
     in property <bool> highlighted: false;
     in property <string> col-name: "";
     in property <string> col-mnemonic: "";
-    in property <string> col-action: "";
+    in property <string> col-action-type: "";
+    in property <string> col-action-params: "";
     callback clicked();
 
     background: highlighted ? #cce4f7 : (row-ta.has-hover ? #f5f5f5 : #ffffff);
@@ -128,78 +205,104 @@ component GestureRow inherits Rectangle {
     HorizontalLayout {
         width: 100%;
         height: 100%;
+        padding-left: 12px;
+        padding-right: 12px;
         spacing: 0px;
 
-        // Column: Name
-        Rectangle {
-            horizontal-stretch: 1;
+        // 手势名称
+        HorizontalLayout {
+            horizontal-stretch: 2;
+            spacing: 0px;
             height: 100%;
-
             Text {
                 text: root.col-name;
                 font-size: 12px;
                 color: #333333;
-                x: 10px;
-                width: parent.width - 10px;
-                height: 100%;
                 vertical-alignment: center;
-            }
-
-            // Right border
-            Rectangle {
-                x: parent.width - 1px;
-                width: 1px;
                 height: 100%;
-                background: #eeeeee;
             }
         }
 
-        // Column: Mnemonic
-        Rectangle {
-            width: 100px;
+        // 手势序列 (mnemonic arrows, blue)
+        HorizontalLayout {
+            horizontal-stretch: 1;
+            spacing: 0px;
             height: 100%;
-
             Text {
                 text: root.col-mnemonic;
-                font-size: 14px;
+                font-size: 15px;
                 color: #0078d4;
-                x: 10px;
-                width: parent.width - 10px;
-                height: 100%;
                 vertical-alignment: center;
-            }
-
-            // Right border
-            Rectangle {
-                x: parent.width - 1px;
-                width: 1px;
                 height: 100%;
-                background: #eeeeee;
             }
         }
 
-        // Column: Action
-        Rectangle {
-            horizontal-stretch: 1;
+        // 操作类型
+        HorizontalLayout {
+            horizontal-stretch: 2;
+            spacing: 0px;
             height: 100%;
-
             Text {
-                text: root.col-action;
+                text: root.col-action-type;
                 font-size: 12px;
                 color: #555555;
-                x: 10px;
-                width: parent.width - 10px;
-                height: 100%;
                 vertical-alignment: center;
+                height: 100%;
+            }
+        }
+
+        // 参数
+        HorizontalLayout {
+            horizontal-stretch: 5;
+            spacing: 0px;
+            height: 100%;
+            Text {
+                text: root.col-action-params;
+                font-size: 12px;
+                color: #333333;
+                vertical-alignment: center;
+                height: 100%;
             }
         }
     }
 }
 
+// Direction selection button for the gesture editor dialog
+component DirButton inherits Rectangle {
+    width: 50px;
+    height: 50px;
+    in property <string> label: "";
+    in property <bool> is-center: false;
+    callback clicked();
+
+    background: is-center ? #fff3e0 : (dir-ta.has-hover ? #e0e0e0 : #f0f0f0);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #d0d0d0;
+
+    dir-ta := TouchArea {
+        width: 100%;
+        height: 100%;
+        clicked => { root.clicked(); }
+    }
+
+    Text {
+        text: root.label;
+        font-size: root.is-center ? 11px : 20px;
+        color: root.is-center ? #e65100 : #333333;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
 export component GestureAppWindow inherits Window {
     title: "RustGesture 设置";
-    preferred-width: 820px;
-    preferred-height: 580px;
+    preferred-width: 1100px;
+    preferred-height: 700px;
+    min-width: 900px;
+    min-height: 600px;
     background: #f5f5f5;
     default-font-family: "Microsoft YaHei";
 
@@ -228,6 +331,25 @@ export component GestureAppWindow inherits Window {
 
     in-out property <string> param-section-title: "参数设置";
 
+    // --- Edit Dialog Properties ---
+
+    in-out property <bool> edit-dialog-visible: false;
+    in-out property <string> edit-dialog-title: "添加手势";
+    in-out property <string> edit-direction-display: "";
+    in-out property <bool> edit-has-directions: false;
+    in-out property <int> edit-action-type-index: 0;
+    in-out property <string> edit-action-detail: "";
+
+    in-out property <[string]> window-commands: [
+        "最小化",
+        "最大化",
+        "还原",
+        "关闭窗口",
+        "显示桌面",
+    ];
+
+    in-out property <int> edit-window-command-index: 0;
+
     // --- Callbacks ---
 
     callback app-selected(int);
@@ -240,6 +362,12 @@ export component GestureAppWindow inherits Window {
 
     callback action-type-changed(int);
     callback action-detail-changed(string);
+
+    // Edit dialog callbacks
+    callback edit-direction-clicked(int);
+    callback edit-clear-directions();
+    callback edit-dialog-confirmed();
+    callback edit-dialog-cancelled();
 
     // --- Layout ---
 
@@ -365,10 +493,11 @@ export component GestureAppWindow inherits Window {
 
             // --- Gesture List Section ---
             VerticalLayout {
-                vertical-stretch: 0;
+                vertical-stretch: 1;
                 padding: 12px;
                 spacing: 8px;
 
+                // 标题
                 Text {
                     text: "手势列表";
                     font-size: 14px;
@@ -376,86 +505,13 @@ export component GestureAppWindow inherits Window {
                     color: #333333;
                 }
 
-                // Table header row
-                Rectangle {
-                    height: 30px;
-                    background: #fafafa;
-                    border-width: 1px;
-                    border-color: #e0e0e0;
-                    border-radius: 2px;
+                // 表头
+                TableHeader { }
 
-                    HorizontalLayout {
-                        width: 100%;
-                        height: 100%;
-                        spacing: 0px;
-
-                        Rectangle {
-                            horizontal-stretch: 1;
-                            height: 100%;
-
-                            Text {
-                                text: "名称";
-                                font-size: 12px;
-                                font-weight: 600;
-                                color: #666666;
-                                x: 10px;
-                                width: parent.width - 10px;
-                                height: 100%;
-                                vertical-alignment: center;
-                            }
-
-                            Rectangle {
-                                x: parent.width - 1px;
-                                width: 1px;
-                                height: 100%;
-                                background: #e0e0e0;
-                            }
-                        }
-
-                        Rectangle {
-                            width: 100px;
-                            height: 100%;
-
-                            Text {
-                                text: "助记符";
-                                font-size: 12px;
-                                font-weight: 600;
-                                color: #666666;
-                                x: 10px;
-                                width: parent.width - 10px;
-                                height: 100%;
-                                vertical-alignment: center;
-                            }
-
-                            Rectangle {
-                                x: parent.width - 1px;
-                                width: 1px;
-                                height: 100%;
-                                background: #e0e0e0;
-                            }
-                        }
-
-                        Rectangle {
-                            horizontal-stretch: 1;
-                            height: 100%;
-
-                            Text {
-                                text: "操作";
-                                font-size: 12px;
-                                font-weight: 600;
-                                color: #666666;
-                                x: 10px;
-                                width: parent.width - 10px;
-                                height: 100%;
-                                vertical-alignment: center;
-                            }
-                        }
-                    }
-                }
-
-                // Gesture rows (scrollable)
+                // 手势行（可滚动区域）
                 ScrollView {
-                    height: 180px;
+                    width: 100%;
+                    vertical-stretch: 1;
                     vertical-scrollbar-policy: as-needed;
 
                     VerticalLayout {
@@ -467,14 +523,15 @@ export component GestureAppWindow inherits Window {
                             highlighted: idx == root.selected-gesture-index;
                             col-name: gesture.name;
                             col-mnemonic: gesture.mnemonic;
-                            col-action: gesture.action-description;
+                            col-action-type: gesture.action-type;
+                            col-action-params: gesture.action-params;
                             clicked => {
                                 root.gesture-selected(idx);
                             }
                         }
 
                         if root.gesture-list.length == 0: Rectangle {
-                            height: 60px;
+                            height: 80px;
                             background: transparent;
 
                             Text {
@@ -490,22 +547,22 @@ export component GestureAppWindow inherits Window {
                     }
                 }
 
-                // Action buttons row
+                // 操作按钮行
                 HorizontalLayout {
                     height: 32px;
                     spacing: 6px;
 
                     Button {
-                        text: "+";
-                        width: 60px;
+                        text: "添加";
+                        width: 70px;
                         clicked => {
                             root.add-gesture-clicked();
                         }
                     }
 
                     Button {
-                        text: "-";
-                        width: 60px;
+                        text: "删除";
+                        width: 70px;
                         enabled: root.selected-gesture-index >= 0;
                         clicked => {
                             root.remove-gesture-clicked(root.selected-gesture-index);
@@ -522,88 +579,338 @@ export component GestureAppWindow inherits Window {
                     }
                 }
             }
+        }
+    }
 
-            // Separator
-            Rectangle {
-                height: 4px;
+    // ===== Edit Gesture Dialog Overlay =====
+    if root.edit-dialog-visible: Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #00000066;
 
-                Rectangle {
-                    height: 1px;
-                    y: 1px;
-                    x: 12px;
-                    width: parent.width - 24px;
-                    background: #e0e0e0;
-                }
-            }
+        // Dialog box centered
+        dialog-box := Rectangle {
+            width: 400px;
+            height: 440px;
+            x: (parent.width - 400px) / 2;
+            y: (parent.height - 440px) / 2;
+            background: #ffffff;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: #cccccc;
 
-            // --- Parameter Editing Section ---
             VerticalLayout {
-                vertical-stretch: 1;
-                padding: 12px;
-                spacing: 8px;
+                width: 100%;
+                height: 100%;
+                padding: 0px;
+                spacing: 0px;
 
-                Text {
-                    text: root.param-section-title;
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #333333;
-                }
-
-                // Action type selector row
-                HorizontalLayout {
-                    height: 32px;
-                    spacing: 8px;
-
-                    Text {
-                        text: "执行操作:";
-                        font-size: 12px;
-                        color: #555555;
-                        vertical-alignment: center;
-                        width: 72px;
-                    }
-
-                    ComboBox {
-                        model: root.action-types;
-                        current-index: root.current-action-type-index;
-                        enabled: root.selected-gesture-index >= 0;
-                        selected(value) => {
-                            root.action-type-changed(root.current-action-type-index);
-                        }
-                    }
-                }
-
-                // Action detail input row
-                HorizontalLayout {
-                    height: 32px;
-                    spacing: 8px;
-
-                    Text {
-                        text: "快捷键:";
-                        font-size: 12px;
-                        color: #555555;
-                        vertical-alignment: center;
-                        width: 72px;
-                    }
-
-                    detail-edit := LineEdit {
-                        text: root.action-detail;
-                        enabled: root.selected-gesture-index >= 0;
-                        placeholder-text: "例如: Ctrl+C";
-                        edited => {
-                            root.action-detail-changed(self.text);
-                        }
-                    }
-                }
-
+                // Title bar with close button
                 Rectangle {
-                    vertical-stretch: 1;
-                    background: transparent;
+                    height: 44px;
+
+                    HorizontalLayout {
+                        width: 100%;
+                        height: 100%;
+                        padding-left: 16px;
+                        padding-right: 12px;
+                        spacing: 0px;
+
+                        Text {
+                            text: root.edit-dialog-title;
+                            font-size: 14px;
+                            font-weight: 700;
+                            color: #333333;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            vertical-stretch: 1;
+                            background: transparent;
+                        }
+
+                        // Close button
+                        Rectangle {
+                            width: 28px;
+                            height: 28px;
+                            y: (parent.height - 28px) / 2;
+                            background: close-ta.has-hover ? #e0e0e0 : transparent;
+                            border-radius: 4px;
+
+                            close-ta := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => {
+                                    root.edit-dialog-cancelled();
+                                }
+                            }
+
+                            Text {
+                                text: "X";
+                                font-size: 14px;
+                                color: #666666;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+                    }
+
+                    // Bottom border
+                    Rectangle {
+                        y: parent.height - 1px;
+                        width: 100%;
+                        height: 1px;
+                        background: #e0e0e0;
+                    }
                 }
 
-                Text {
-                    text: "* 改动将自动保存并立即生效";
-                    font-size: 11px;
-                    color: #999999;
+                // Dialog content
+                VerticalLayout {
+                    vertical-stretch: 1;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    padding-top: 12px;
+                    padding-bottom: 16px;
+                    spacing: 10px;
+
+                    // Direction label
+                    Text {
+                        text: "手势方向:";
+                        font-size: 12px;
+                        color: #555555;
+                    }
+
+                    // Direction grid (3x3, centered)
+                    HorizontalLayout {
+                        alignment: center;
+                        height: 162px;
+
+                        VerticalLayout {
+                            width: 162px;
+                            spacing: 4px;
+                            alignment: center;
+
+                            // Row 0: UpLeft, Up, UpRight
+                            HorizontalLayout {
+                                height: 50px;
+                                spacing: 4px;
+
+                                DirButton {
+                                    label: "↖";
+                                    clicked => { root.edit-direction-clicked(4); }
+                                }
+                                DirButton {
+                                    label: "↑";
+                                    clicked => { root.edit-direction-clicked(0); }
+                                }
+                                DirButton {
+                                    label: "↗";
+                                    clicked => { root.edit-direction-clicked(5); }
+                                }
+                            }
+
+                            // Row 1: Left, Clear, Right
+                            HorizontalLayout {
+                                height: 50px;
+                                spacing: 4px;
+
+                                DirButton {
+                                    label: "←";
+                                    clicked => { root.edit-direction-clicked(2); }
+                                }
+                                DirButton {
+                                    label: "清除";
+                                    is-center: true;
+                                    clicked => { root.edit-clear-directions(); }
+                                }
+                                DirButton {
+                                    label: "→";
+                                    clicked => { root.edit-direction-clicked(3); }
+                                }
+                            }
+
+                            // Row 2: DownLeft, Down, DownRight
+                            HorizontalLayout {
+                                height: 50px;
+                                spacing: 4px;
+
+                                DirButton {
+                                    label: "↙";
+                                    clicked => { root.edit-direction-clicked(6); }
+                                }
+                                DirButton {
+                                    label: "↓";
+                                    clicked => { root.edit-direction-clicked(1); }
+                                }
+                                DirButton {
+                                    label: "↘";
+                                    clicked => { root.edit-direction-clicked(7); }
+                                }
+                            }
+                        }
+                    }
+
+                    // Current direction sequence display
+                    HorizontalLayout {
+                        height: 32px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "当前序列:";
+                            font-size: 12px;
+                            color: #555555;
+                            vertical-alignment: center;
+                            width: 64px;
+                        }
+
+                        Rectangle {
+                            vertical-stretch: 1;
+                            background: #f8f8f8;
+                            border-radius: 4px;
+                            border-width: 1px;
+                            border-color: #e0e0e0;
+
+                            Text {
+                                text: root.edit-has-directions
+                                    ? root.edit-direction-display
+                                    : "请点击方向按钮...";
+                                font-size: root.edit-has-directions ? 16px : 12px;
+                                color: root.edit-has-directions ? #0078d4 : #bbbbbb;
+                                x: 10px;
+                                width: parent.width - 10px;
+                                height: 100%;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    // Action type selector
+                    HorizontalLayout {
+                        height: 32px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "执行操作:";
+                            font-size: 12px;
+                            color: #555555;
+                            vertical-alignment: center;
+                            width: 64px;
+                        }
+
+                        ComboBox {
+                            model: root.action-types;
+                            current-index <=> root.edit-action-type-index;
+                        }
+                    }
+
+                    // Action detail input (for non-Window types)
+                    if root.edit-action-type-index != 2: HorizontalLayout {
+                        height: 32px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "参数:";
+                            font-size: 12px;
+                            color: #555555;
+                            vertical-alignment: center;
+                            width: 64px;
+                        }
+
+                        LineEdit {
+                            text: root.edit-action-detail;
+                            edited => {
+                                root.edit-action-detail = self.text;
+                            }
+                        }
+                    }
+
+                    // Window command selector (for Window type)
+                    if root.edit-action-type-index == 2: HorizontalLayout {
+                        height: 32px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "窗口命令:";
+                            font-size: 12px;
+                            color: #555555;
+                            vertical-alignment: center;
+                            width: 64px;
+                        }
+
+                        ComboBox {
+                            model: root.window-commands;
+                            current-index <=> root.edit-window-command-index;
+                        }
+                    }
+
+                    // Spacer
+                    Rectangle {
+                        vertical-stretch: 1;
+                        background: transparent;
+                    }
+
+                    // OK / Cancel buttons row
+                    HorizontalLayout {
+                        height: 36px;
+                        spacing: 8px;
+                        alignment: end;
+
+                        // Cancel button
+                        Rectangle {
+                            width: 80px;
+                            height: 32px;
+                            background: cancel-ta.has-hover ? #e8e8e8 : #ffffff;
+                            border-radius: 4px;
+                            border-width: 1px;
+                            border-color: #d0d0d0;
+
+                            cancel-ta := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => {
+                                    root.edit-dialog-cancelled();
+                                }
+                            }
+
+                            Text {
+                                text: "取消";
+                                font-size: 13px;
+                                color: #555555;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+
+                        // OK button (primary)
+                        Rectangle {
+                            width: 80px;
+                            height: 32px;
+                            background: ok-ta.has-hover ? #106ebe : #0078d4;
+                            border-radius: 4px;
+
+                            ok-ta := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => {
+                                    root.edit-dialog-confirmed();
+                                }
+                            }
+
+                            Text {
+                                text: "确定";
+                                font-size: 13px;
+                                color: #ffffff;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+                    }
                 }
             }
         }
