@@ -366,16 +366,24 @@ fn build_app_model(state: &DialogState) -> slint::ModelRc<AppItem> {
 }
 
 fn build_gesture_model(state: &DialogState) -> slint::ModelRc<GestureItem> {
-    let items: Vec<GestureItem> = state
-        .gesture_pairs()
+    let pairs = state.gesture_pairs();
+    let items: Vec<GestureItem> = pairs
         .iter()
-        .map(|(name, action)| GestureItem {
-            name: SharedString::from(name.as_str()),
-            mnemonic: SharedString::from(gesture_name_to_mnemonic(name).as_str()),
-            action_type: SharedString::from(action_type_display(action).as_str()),
-            action_params: SharedString::from(action_params_display(action).as_str()),
+        .map(|(name, action)| {
+            let item = GestureItem {
+                name: SharedString::from(name.as_str()),
+                mnemonic: SharedString::from(gesture_name_to_mnemonic(name).as_str()),
+                action_type: SharedString::from(action_type_display(action).as_str()),
+                action_params: SharedString::from(action_params_display(action).as_str()),
+            };
+            info!(
+                "GestureItem: name='{}', mnemonic='{}', type='{}', params='{}'",
+                item.name, item.mnemonic, item.action_type, item.action_params
+            );
+            item
         })
         .collect();
+    info!("build_gesture_model: total {} items", items.len());
     vec_to_model(items)
 }
 

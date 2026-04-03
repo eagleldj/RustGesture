@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__zai-mcp-server__analyze_image",
+      "Read(//c/Users/13036/.claude/plugins/cache/claude-plugins-official/superpowers/4.0.3/skills/subagent-driven-development/**)",
+      "WebSearch",
+      "mcp__web-reader__webReader",
+      "Read(//c/Users/13036/.cargo/**)",
+      "Bash(mkdir -p .cargo)",
+      "Bash(.cargo/config.toml:*)"
+    ],
+    "additionalDirectories": [
+      "d:\\_workspace\\src\\RustGesture\\docs"
+    ]
+  }
+}
