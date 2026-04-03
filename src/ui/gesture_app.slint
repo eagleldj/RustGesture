@@ -115,69 +115,55 @@ component TableHeader inherits Rectangle {
     }
 
     HorizontalLayout {
-        width: 100%;
         height: 100%;
         padding-left: 12px;
         padding-right: 12px;
         spacing: 0px;
 
         // 手势名称
-        HorizontalLayout {
+        Text {
+            text: "手势名称";
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+            vertical-alignment: center;
             horizontal-stretch: 2;
-            spacing: 0px;
-            Text {
-                text: "手势名称";
-                font-size: 11px;
-                font-weight: 700;
-                color: #666666;
-                vertical-alignment: center;
-            }
         }
 
         // 手势序列
-        HorizontalLayout {
+        Text {
+            text: "手势序列";
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+            vertical-alignment: center;
             horizontal-stretch: 1;
-            spacing: 0px;
-            Text {
-                text: "手势序列";
-                font-size: 11px;
-                font-weight: 700;
-                color: #666666;
-                vertical-alignment: center;
-            }
         }
 
         // 操作类型
-        HorizontalLayout {
+        Text {
+            text: "操作类型";
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+            vertical-alignment: center;
             horizontal-stretch: 2;
-            spacing: 0px;
-            Text {
-                text: "操作类型";
-                font-size: 11px;
-                font-weight: 700;
-                color: #666666;
-                vertical-alignment: center;
-            }
         }
 
         // 参数
-        HorizontalLayout {
+        Text {
+            text: "参数";
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+            vertical-alignment: center;
             horizontal-stretch: 5;
-            spacing: 0px;
-            Text {
-                text: "参数";
-                font-size: 11px;
-                font-weight: 700;
-                color: #666666;
-                vertical-alignment: center;
-            }
         }
     }
 }
 
 // Gesture row: 4-column table layout
 component GestureRow inherits Rectangle {
-    width: 100%;
     height: 36px;
     in property <bool> highlighted: false;
     in property <string> col-name: "";
@@ -203,66 +189,45 @@ component GestureRow inherits Rectangle {
     }
 
     HorizontalLayout {
-        width: 100%;
         height: 100%;
         padding-left: 12px;
         padding-right: 12px;
         spacing: 0px;
 
         // 手势名称
-        HorizontalLayout {
+        Text {
+            text: root.col-name;
+            font-size: 12px;
+            color: #333333;
+            vertical-alignment: center;
             horizontal-stretch: 2;
-            spacing: 0px;
-            height: 100%;
-            Text {
-                text: root.col-name;
-                font-size: 12px;
-                color: #333333;
-                vertical-alignment: center;
-                height: 100%;
-            }
         }
 
         // 手势序列 (mnemonic arrows, blue)
-        HorizontalLayout {
+        Text {
+            text: root.col-mnemonic;
+            font-size: 15px;
+            color: #0078d4;
+            vertical-alignment: center;
             horizontal-stretch: 1;
-            spacing: 0px;
-            height: 100%;
-            Text {
-                text: root.col-mnemonic;
-                font-size: 15px;
-                color: #0078d4;
-                vertical-alignment: center;
-                height: 100%;
-            }
         }
 
         // 操作类型
-        HorizontalLayout {
+        Text {
+            text: root.col-action-type;
+            font-size: 12px;
+            color: #555555;
+            vertical-alignment: center;
             horizontal-stretch: 2;
-            spacing: 0px;
-            height: 100%;
-            Text {
-                text: root.col-action-type;
-                font-size: 12px;
-                color: #555555;
-                vertical-alignment: center;
-                height: 100%;
-            }
         }
 
         // 参数
-        HorizontalLayout {
+        Text {
+            text: root.col-action-params;
+            font-size: 12px;
+            color: #333333;
+            vertical-alignment: center;
             horizontal-stretch: 5;
-            spacing: 0px;
-            height: 100%;
-            Text {
-                text: root.col-action-params;
-                font-size: 12px;
-                color: #333333;
-                vertical-alignment: center;
-                height: 100%;
-            }
         }
     }
 }
