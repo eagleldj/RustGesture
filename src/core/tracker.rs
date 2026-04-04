@@ -2,11 +2,13 @@
 //!
 //! This module tracks mouse movements and determines when to start gesture recognition.
 
-use crate::core::gesture::{Gesture, GestureContext, GestureDir, GestureModifier, GestureTriggerButton, Point};
 use crate::config::config::Settings;
+use crate::core::gesture::{
+    Gesture, GestureContext, GestureDir, GestureModifier, GestureTriggerButton, Point,
+};
 use crate::winapi::hook::MouseEvent;
-use tracing::{debug, info, trace};
 use std::time::{Duration, Instant};
+use tracing::{debug, info, trace};
 
 /// Path tracker state
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -69,51 +71,52 @@ impl PathTracker {
     }
 
     /// Handle a mouse event
-    pub fn handle_mouse_event(&mut self, event: &MouseEvent, trigger_button: GestureTriggerButton) {
+    ///
+    /// All four buttons (Middle/Right/X1/X2) can trigger gestures when in Idle state.
+    /// Button presses during Tracking/Capturing are treated as modifiers.
+    pub fn handle_mouse_event(&mut self, event: &MouseEvent) {
         match event {
             MouseEvent::MouseMove(x, y) => self.on_mouse_move(*x, *y),
-            MouseEvent::LeftButtonDown(x, y) => {
-                if trigger_button == GestureTriggerButton::Right
-                    || trigger_button == GestureTriggerButton::Middle
-                    || trigger_button == GestureTriggerButton::X1
-                    || trigger_button == GestureTriggerButton::X2
-                {
-                    self.on_modifier(GestureModifier::LeftButtonDown);
-                } else {
-                    self.on_mouse_down(*x, *y, trigger_button);
-                }
+            MouseEvent::LeftButtonDown(_, _) => {
+                self.on_modifier(GestureModifier::LeftButtonDown);
             }
             MouseEvent::RightButtonDown(x, y) => {
-                if trigger_button == GestureTriggerButton::Right {
-                    self.on_mouse_down(*x, *y, trigger_button);
+                if self.state == TrackerState::Idle {
+                    self.on_mouse_down(*x, *y, GestureTriggerButton::Right);
                 } else {
                     self.on_modifier(GestureModifier::RightButtonDown);
                 }
             }
             MouseEvent::MiddleButtonDown(x, y) => {
-                if trigger_button == GestureTriggerButton::Middle {
-                    self.on_mouse_down(*x, *y, trigger_button);
+                if self.state == TrackerState::Idle {
+                    self.on_mouse_down(*x, *y, GestureTriggerButton::Middle);
                 } else {
                     self.on_modifier(GestureModifier::MiddleButtonDown);
                 }
             }
             MouseEvent::XButtonDown(x, y, btn) => {
-                // XBUTTON1 = 1, XBUTTON2 = 2
-                let is_x1 = *btn == 1 && trigger_button == GestureTriggerButton::X1;
-                let is_x2 = *btn == 2 && trigger_button == GestureTriggerButton::X2;
-                if is_x1 || is_x2 {
-                    self.on_mouse_down(*x, *y, trigger_button);
+                let trigger_btn = if *btn == 1 {
+                    GestureTriggerButton::X1
                 } else {
-                    // Treat as modifier
-                    if *btn == 1 {
-                        self.on_modifier(GestureModifier::X1ButtonDown);
-                    } else if *btn == 2 {
-                        self.on_modifier(GestureModifier::X2ButtonDown);
-                    }
+                    GestureTriggerButton::X2
+                };
+                if self.state == TrackerState::Idle {
+                    self.on_mouse_down(*x, *y, trigger_btn);
+                } else {
+                    let modifier = if *btn == 1 {
+                        GestureModifier::X1ButtonDown
+                    } else {
+                        GestureModifier::X2ButtonDown
+                    };
+                    self.on_modifier(modifier);
                 }
             }
-            MouseEvent::RightButtonUp(_, _) | MouseEvent::MiddleButtonUp(_, _) | MouseEvent::XButtonUp(_, _, _) => {
+            MouseEvent::RightButtonUp(_, _)
+            | MouseEvent::MiddleButtonUp(_, _)
+            | MouseEvent::XButtonUp(_, _, _) => {
                 if self.state == TrackerState::Tracking {
+                    self.on_mouse_up();
+                } else if self.state == TrackerState::Capturing {
                     self.on_mouse_up();
                 }
             }
@@ -178,7 +181,10 @@ impl PathTracker {
             // Calculate direction
             let vector = last_effective.vector_to(&current_point);
             let use_8dir = self.settings.enable_8_direction
-                && self.current_gesture.as_ref().map_or(false, |g| g.len() == 0);
+                && self
+                    .current_gesture
+                    .as_ref()
+                    .map_or(false, |g| g.len() == 0);
 
             let dir = if use_8dir {
                 // Use 8-direction for first stroke
@@ -196,7 +202,9 @@ impl PathTracker {
                 if new_len != old_len {
                     info!("➡️  Direction detected: {} ({:?})", dir.arrow(), dir);
                     debug!("Gesture direction added: {:?}", dir);
-                    self.emit_event(TrackerEvent::GestureChanged(self.current_gesture.as_ref().unwrap().clone()));
+                    self.emit_event(TrackerEvent::GestureChanged(
+                        self.current_gesture.as_ref().unwrap().clone(),
+                    ));
                 }
             }
 

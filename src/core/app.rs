@@ -3,11 +3,16 @@
 //! This module provides a high-level application that integrates all components.
 
 use crate::config::{config::GestureConfig, manager::ConfigManager};
-use crate::core::{executor::CommandExecutor, gesture::Gesture, intent::GestureIntentFinder, recognizer::{create_shared_recognizer, GestureRecognizerEvent, SharedRecognizer}};
 use crate::core::hook_callback::GestureHookCallback;
+use crate::core::{
+    executor::CommandExecutor,
+    gesture::Gesture,
+    intent::GestureIntentFinder,
+    recognizer::{create_shared_recognizer, GestureRecognizerEvent, SharedRecognizer},
+};
 use crate::winapi::hook::MouseHook;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use tracing::{debug, error, info, warn};
 
 // Make GestureApp safe to send across threads
@@ -39,10 +44,7 @@ impl GestureApp {
         let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
 
         // Create recognizer
-        let recognizer = create_shared_recognizer(
-            config.settings.clone(),
-            config.settings.trigger_button.clone(),
-        );
+        let recognizer = create_shared_recognizer(config.settings.clone());
 
         // Create executor
         let executor = CommandExecutor::new();
@@ -58,6 +60,21 @@ impl GestureApp {
                 match event {
                     GestureRecognizerEvent::GestureCompleted(gesture) => {
                         info!("✅ {}", gesture.short_display());
+
+                        // Check if in capture mode (for settings UI)
+                        if crate::core::capture::is_capture_mode() {
+                            let dirs: Vec<String> = gesture
+                                .directions
+                                .iter()
+                                .map(|d| d.dir_name().to_string())
+                                .collect();
+                            info!(
+                                "🎯 Gesture captured: {:?} (button: {:?})",
+                                dirs, gesture.trigger_button
+                            );
+                            crate::core::capture::set_capture_result(dirs, gesture.trigger_button);
+                            return;
+                        }
 
                         // Find matching intent
                         let finder = intent_finder_clone.lock().unwrap();
@@ -78,7 +95,10 @@ impl GestureApp {
                         debug!("❌ Gesture cancelled");
                     }
                     GestureRecognizerEvent::GestureStarted(context) => {
-                        debug!("🎬 Gesture started at: ({}, {})", context.start_point.x, context.start_point.y);
+                        debug!(
+                            "🎬 Gesture started at: ({}, {})",
+                            context.start_point.x, context.start_point.y
+                        );
                     }
                     GestureRecognizerEvent::GestureRecognized(gesture, _is_final) => {
                         debug!("🔍 Gesture recognized: {}", gesture.short_display());
@@ -100,7 +120,7 @@ impl GestureApp {
             recognizer,
             intent_finder,
             executor,
-            hook: None,  // Hook will be created in message loop thread
+            hook: None, // Hook will be created in message loop thread
             enabled,
         })
     }

@@ -2,16 +2,15 @@
 //!
 //! This module connects Windows mouse hook events to the gesture recognition system.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use tracing::{debug, info, warn};
 use windows::Win32::Foundation::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, Ordering};
-use tracing::{debug, info, warn};
 
 use crate::core::recognizer::SharedRecognizer;
-use crate::winapi::hook::{MouseEvent, MouseHookCallback, set_processing_mouse_moves};
-use crate::config::config::TriggerButton;
+use crate::winapi::hook::{set_processing_mouse_moves, MouseEvent, MouseHookCallback};
 use std::sync::mpsc;
 
 /// Hook callback that connects mouse events to gesture recognition
@@ -24,11 +23,7 @@ pub struct GestureHookCallback {
 
 impl GestureHookCallback {
     /// Create a new gesture hook callback
-    pub fn new(
-        recognizer: SharedRecognizer,
-        _trigger_button: TriggerButton,
-        enabled: Arc<AtomicBool>
-    ) -> Self {
+    pub fn new(recognizer: SharedRecognizer, enabled: Arc<AtomicBool>) -> Self {
         info!("GestureHookCallback created with multi-button support (Right/Middle/X1/X2)");
 
         // Create a channel for async event processing

@@ -1,15 +1,15 @@
 mod config;
 mod core;
-mod winapi;
 mod ui;
+mod winapi;
 
 use anyhow::Result;
-use tracing::{info, error, warn, debug};
-use tracing_subscriber;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
+use tracing::{debug, error, info, warn};
+use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive(tracing::Level::INFO.into())
+                .add_directive(tracing::Level::INFO.into()),
         )
         .init();
 
@@ -64,7 +64,9 @@ async fn main() -> Result<()> {
 
     let config_path_clone = config_path.clone();
     let _message_loop_handle = std::thread::spawn(move || {
-        if let (Some(recognizer), Some(config), Some(enabled)) = (recognizer_opt, config_opt, enabled_opt) {
+        if let (Some(recognizer), Some(config), Some(enabled)) =
+            (recognizer_opt, config_opt, enabled_opt)
+        {
             // Create system tray IN MESSAGE LOOP THREAD
             info!("Initializing system tray in message loop thread...");
             let tray = match ui::TrayIcon::new(enabled.clone(), shutdown_tx, config_path_clone) {
@@ -81,24 +83,23 @@ async fn main() -> Result<()> {
             };
 
             // Create and install hook IN THIS THREAD
-            use crate::winapi::hook::MouseHook;
             use crate::core::hook_callback::GestureHookCallback;
+            use crate::winapi::hook::MouseHook;
 
             let mut hook = MouseHook::new();
-            let callback = GestureHookCallback::new(
-                recognizer,
-                config.settings.trigger_button.clone(),
-                enabled,
-            );
+            let callback = GestureHookCallback::new(recognizer, enabled);
             hook.set_callback(Box::new(callback));
 
             // Install hook in message loop thread
             unsafe {
-                use windows::Win32::UI::WindowsAndMessaging::*;
                 use windows::Win32::Foundation::HWND;
+                use windows::Win32::UI::WindowsAndMessaging::*;
 
                 if let Err(e) = hook.install() {
-                    tracing::error!("Failed to install mouse hook in message loop thread: {:?}", e);
+                    tracing::error!(
+                        "Failed to install mouse hook in message loop thread: {:?}",
+                        e
+                    );
                 } else {
                     tracing::info!("Mouse hook installed in message loop thread");
                 }
@@ -122,7 +123,14 @@ async fn main() -> Result<()> {
     info!("System tray initialized");
 
     info!("RustGesture started successfully");
-    info!("Gesture recognition is {}", if enabled.load(Ordering::SeqCst) { "enabled" } else { "disabled" });
+    info!(
+        "Gesture recognition is {}",
+        if enabled.load(Ordering::SeqCst) {
+            "enabled"
+        } else {
+            "disabled"
+        }
+    );
     info!("Multi-button support enabled: Right, Middle, X1, X2");
 
     // Start performance monitoring task

@@ -3,8 +3,8 @@
 //! This module integrates the path tracker and gesture parsing to provide
 //! high-level gesture recognition functionality.
 
-use crate::config::config::{Settings, TriggerButton};
-use crate::core::gesture::{Gesture, GestureDir, GestureModifier, GestureTriggerButton};
+use crate::config::config::Settings;
+use crate::core::gesture::{Gesture, GestureDir, GestureModifier};
 use crate::core::parser::{calculate_4direction, calculate_8direction};
 use crate::core::tracker::{PathTracker, TrackerEvent, TrackerState};
 use crate::winapi::hook::MouseEvent;
@@ -14,29 +14,17 @@ use tracing::{debug, info, warn};
 /// Gesture recognizer that combines tracking and parsing
 pub struct GestureRecognizer {
     tracker: PathTracker,
-    trigger_button: GestureTriggerButton,
     max_gesture_steps: usize,
 }
 
 impl GestureRecognizer {
     /// Create a new gesture recognizer
-    pub fn new(settings: Settings, trigger_button: TriggerButton) -> Self {
+    pub fn new(settings: Settings) -> Self {
         let tracker = PathTracker::new(settings);
 
         Self {
             tracker,
-            trigger_button: Self::convert_trigger_button(trigger_button),
             max_gesture_steps: 12,
-        }
-    }
-
-    /// Convert config trigger button to core trigger button
-    fn convert_trigger_button(btn: TriggerButton) -> GestureTriggerButton {
-        match btn {
-            TriggerButton::Right => GestureTriggerButton::Right,
-            TriggerButton::Middle => GestureTriggerButton::Middle,
-            TriggerButton::X1 => GestureTriggerButton::X1,
-            TriggerButton::X2 => GestureTriggerButton::X2,
         }
     }
 
@@ -61,9 +49,7 @@ impl GestureRecognizer {
                 TrackerEvent::GestureCompleted(gesture) => {
                     GestureRecognizerEvent::GestureCompleted(gesture)
                 }
-                TrackerEvent::GestureCancelled => {
-                    GestureRecognizerEvent::GestureCancelled
-                }
+                TrackerEvent::GestureCancelled => GestureRecognizerEvent::GestureCancelled,
                 TrackerEvent::ModifierDetected(modifier) => {
                     GestureRecognizerEvent::ModifierDetected(modifier)
                 }
@@ -73,18 +59,11 @@ impl GestureRecognizer {
     }
 
     /// Handle a mouse event
+    ///
+    /// All buttons can trigger gestures; the tracker determines the trigger
+    /// from the event type and its own state.
     pub fn handle_mouse_event(&mut self, event: &MouseEvent) {
-        // Determine trigger button from event type for multi-button support
-        let trigger_btn = match event {
-            MouseEvent::RightButtonDown(_, _) => GestureTriggerButton::Right,
-            MouseEvent::MiddleButtonDown(_, _) => GestureTriggerButton::Middle,
-            MouseEvent::XButtonDown(_, _, btn) => {
-                if *btn == 1 { GestureTriggerButton::X1 } else { GestureTriggerButton::X2 }
-            }
-            _ => self.trigger_button, // Use configured trigger for other events
-        };
-
-        self.tracker.handle_mouse_event(event, trigger_btn);
+        self.tracker.handle_mouse_event(event);
     }
 
     /// Check for timeout
@@ -126,11 +105,8 @@ pub enum GestureRecognizerEvent {
 pub type SharedRecognizer = Arc<Mutex<GestureRecognizer>>;
 
 /// Create a shared gesture recognizer
-pub fn create_shared_recognizer(
-    settings: Settings,
-    trigger_button: TriggerButton,
-) -> SharedRecognizer {
-    Arc::new(Mutex::new(GestureRecognizer::new(settings, trigger_button)))
+pub fn create_shared_recognizer(settings: Settings) -> SharedRecognizer {
+    Arc::new(Mutex::new(GestureRecognizer::new(settings)))
 }
 
 #[cfg(test)]
@@ -140,14 +116,14 @@ mod tests {
     #[test]
     fn test_recognizer_creation() {
         let settings = Settings::default();
-        let recognizer = GestureRecognizer::new(settings, TriggerButton::Middle);
+        let recognizer = GestureRecognizer::new(settings);
         assert_eq!(recognizer.state(), &TrackerState::Idle);
     }
 
     #[test]
     fn test_recognizer_tracking() {
         let settings = Settings::default();
-        let mut recognizer = GestureRecognizer::new(settings, TriggerButton::Middle);
+        let mut recognizer = GestureRecognizer::new(settings);
 
         // Simulate middle button down
         recognizer.handle_mouse_event(&MouseEvent::MiddleButtonDown(100, 100));

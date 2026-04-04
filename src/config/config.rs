@@ -109,10 +109,24 @@ impl Action {
                 format!("Window: {:?}", win.command)
             }
             Action::Run(run) => {
-                format!("Run: {} {}", run.command, run.args.as_ref().unwrap_or(&"".to_string()))
+                format!(
+                    "Run: {} {}",
+                    run.command,
+                    run.args.as_ref().unwrap_or(&"".to_string())
+                )
             }
         }
     }
+}
+
+/// A gesture entry combining a user-friendly name with an action.
+/// Stored as the value in gesture HashMaps (key is the direction sequence).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GestureEntry {
+    #[serde(default)]
+    pub name: String,
+    #[serde(flatten)]
+    pub action: Action,
 }
 
 impl MouseButton {
@@ -177,27 +191,10 @@ pub struct RunAction {
     pub args: Option<String>,
 }
 
-/// Trigger button for gestures
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TriggerButton {
-    Right,
-    Middle,
-    X1,
-    X2,
-}
-
-impl Default for TriggerButton {
-    fn default() -> Self {
-        TriggerButton::Middle
-    }
-}
-
 /// Application settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Settings {
-    /// Which mouse button triggers gestures
-    pub trigger_button: TriggerButton,
-
     /// Minimum distance in pixels before gesture starts
     pub min_distance: u32,
 
@@ -217,7 +214,6 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            trigger_button: TriggerButton::Middle,
             min_distance: 5,
             effective_move: 20,
             stay_timeout: 500,
@@ -234,10 +230,10 @@ pub struct GestureConfig {
     pub version: u32,
 
     /// Global gesture mappings
-    pub global_gestures: HashMap<String, Action>,
+    pub global_gestures: HashMap<String, GestureEntry>,
 
     /// Application-specific gesture mappings
-    pub app_gestures: HashMap<String, HashMap<String, Action>>,
+    pub app_gestures: HashMap<String, HashMap<String, GestureEntry>>,
 
     /// Applications where gestures are disabled
     pub disabled_apps: HashSet<String>,
@@ -250,26 +246,35 @@ impl Default for GestureConfig {
     fn default() -> Self {
         let mut global_gestures = HashMap::new();
 
-        // Add some default gestures
+        // Default gestures use button prefix: M_ = Middle, R_ = Right, X1_ = X1, X2_ = X2
         global_gestures.insert(
-            "Right".to_string(),
-            Action::Keyboard(KeyboardAction {
-                keys: vec!["VK_CONTROL".to_string(), "VK_L".to_string()], // Lock? Or maybe Alt+Left
-            }),
+            "M_Right".to_string(),
+            GestureEntry {
+                name: "Ctrl+L".to_string(),
+                action: Action::Keyboard(KeyboardAction {
+                    keys: vec!["VK_CONTROL".to_string(), "VK_L".to_string()],
+                }),
+            },
         );
 
         global_gestures.insert(
-            "Down".to_string(),
-            Action::Window(WindowAction {
-                command: WindowCommand::Minimize,
-            }),
+            "M_Down".to_string(),
+            GestureEntry {
+                name: "最小化".to_string(),
+                action: Action::Window(WindowAction {
+                    command: WindowCommand::Minimize,
+                }),
+            },
         );
 
         global_gestures.insert(
-            "Up".to_string(),
-            Action::Window(WindowAction {
-                command: WindowCommand::Maximize,
-            }),
+            "M_Up".to_string(),
+            GestureEntry {
+                name: "最大化".to_string(),
+                action: Action::Window(WindowAction {
+                    command: WindowCommand::Maximize,
+                }),
+            },
         );
 
         Self {
@@ -292,6 +297,33 @@ mod tests {
         let json = serde_json::to_string(&gesture).unwrap();
         assert!(json.contains("Right"));
         assert!(json.contains("Down"));
+    }
+
+    #[test]
+    fn test_gesture_entry_serialization() {
+        let entry = GestureEntry {
+            name: "复制".to_string(),
+            action: Action::Keyboard(KeyboardAction {
+                keys: vec!["VK_CONTROL".to_string(), "VK_C".to_string()],
+            }),
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        assert!(json.contains("\"name\":\"复制\""));
+        assert!(json.contains("\"type\":\"keyboard\""));
+        assert!(json.contains("\"keys\""));
+
+        // Round-trip
+        let deserialized: GestureEntry = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.name, "复制");
+    }
+
+    #[test]
+    fn test_gesture_entry_backward_compatible() {
+        // Old format without name field should deserialize with empty name
+        let json = r#"{"type":"window","command":"Maximize"}"#;
+        let entry: GestureEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.name, "");
+        assert!(matches!(entry.action, Action::Window(_)));
     }
 
     #[test]
