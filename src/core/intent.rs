@@ -17,9 +17,7 @@ pub struct GestureIntent {
 impl GestureIntent {
     /// Check if this intent can be executed during the gesture (e.g., scroll wheel)
     pub fn can_execute_on_modifier(&self) -> bool {
-        matches!(&self.action,
-            Action::Window(_) | Action::Mouse(_)
-        )
+        matches!(&self.action, Action::Window(_) | Action::Mouse(_))
     }
 }
 
@@ -55,9 +53,12 @@ impl GestureIntentFinder {
     fn build_global_cache(config: &GestureConfig) -> HashMap<String, Action> {
         let mut cache = HashMap::new();
 
-        for (gesture_str, action) in &config.global_gestures {
-            cache.insert(gesture_str.clone(), action.clone());
-            debug!("Cached global gesture: {} -> {:?}", gesture_str, action);
+        for (gesture_str, entry) in &config.global_gestures {
+            cache.insert(gesture_str.clone(), entry.action.clone());
+            debug!(
+                "Cached global gesture: {} -> {:?}",
+                gesture_str, entry.action
+            );
         }
 
         cache
@@ -69,9 +70,12 @@ impl GestureIntentFinder {
 
         for (app_name, gestures) in &config.app_gestures {
             let mut cache = HashMap::new();
-            for (gesture_str, action) in gestures {
-                cache.insert(gesture_str.clone(), action.clone());
-                debug!("Cached app gesture: {} -> {} -> {:?}", app_name, gesture_str, action);
+            for (gesture_str, entry) in gestures {
+                cache.insert(gesture_str.clone(), entry.action.clone());
+                debug!(
+                    "Cached app gesture: {} -> {} -> {:?}",
+                    app_name, gesture_str, entry.action
+                );
             }
             app_caches.insert(app_name.clone(), cache);
         }
@@ -88,11 +92,17 @@ impl GestureIntentFinder {
     }
 
     /// Find the intent for a gesture
+    ///
+    /// The lookup key includes the trigger button (e.g., "M_Right" for Middle button + Right direction).
+    /// Only matches when both the trigger button and direction sequence match exactly.
     pub fn find(&self, gesture: &Gesture, app_name: Option<&str>) -> Option<GestureIntent> {
         let gesture_str = Self::gesture_to_string(gesture);
-        debug!("Looking up gesture: {} for app: {:?}", gesture_str, app_name);
+        debug!(
+            "Looking up gesture: {} for app: {:?}",
+            gesture_str, app_name
+        );
 
-        // Priority 1: App-specific gestures
+        // Priority 1: App-specific gestures (with button prefix)
         if let Some(app) = app_name {
             if let Some(app_cache) = self.app_caches.get(app) {
                 if let Some(action) = app_cache.get(&gesture_str) {
@@ -105,9 +115,9 @@ impl GestureIntentFinder {
             }
         }
 
-        // Priority 2: Global gestures
+        // Priority 2: Global gestures (with button prefix)
         if let Some(action) = self.global_cache.get(&gesture_str) {
-            debug!("Found global gesture match");
+            debug!("Found global gesture match (button-specific)");
             return Some(GestureIntent {
                 gesture: gesture.clone(),
                 action: action.clone(),
@@ -126,13 +136,19 @@ impl GestureIntentFinder {
     ) -> Option<GestureIntent> {
         // Try exact match first (with modifiers)
         let gesture_with_modifiers = Self::gesture_to_string_with_modifiers(gesture);
-        debug!("Looking up gesture with modifiers: {}", gesture_with_modifiers);
+        debug!(
+            "Looking up gesture with modifiers: {}",
+            gesture_with_modifiers
+        );
 
         // Check app-specific first
         if let Some(app) = app_name {
             if let Some(app_cache) = self.app_caches.get(app) {
                 if let Some(action) = app_cache.get(&gesture_with_modifiers) {
-                    debug!("Found app-specific gesture match with modifiers for {}", app);
+                    debug!(
+                        "Found app-specific gesture match with modifiers for {}",
+                        app
+                    );
                     return Some(GestureIntent {
                         gesture: gesture.clone(),
                         action: action.clone(),
@@ -167,30 +183,37 @@ impl GestureIntentFinder {
         true
     }
 
-    /// Convert gesture to string representation
+    /// Convert gesture to string representation (includes trigger button prefix)
+    /// Format: "M_Right" (Middle button + Right direction)
     pub fn gesture_to_string(gesture: &Gesture) -> String {
+        let button_prefix = match gesture.trigger_button {
+            crate::core::gesture::GestureTriggerButton::Right => "R_",
+            crate::core::gesture::GestureTriggerButton::Middle => "M_",
+            crate::core::gesture::GestureTriggerButton::X1 => "X1_",
+            crate::core::gesture::GestureTriggerButton::X2 => "X2_",
+        };
+        format!(
+            "{}{}",
+            button_prefix,
+            Self::gesture_directions_to_string(gesture)
+        )
+    }
+
+    /// Convert gesture directions to string representation (direction-only, no button prefix)
+    fn gesture_directions_to_string(gesture: &Gesture) -> String {
         gesture
             .directions
             .iter()
-            .map(|dir| match dir {
-                crate::core::gesture::GestureDir::Up => "Up",
-                crate::core::gesture::GestureDir::Down => "Down",
-                crate::core::gesture::GestureDir::Left => "Left",
-                crate::core::gesture::GestureDir::Right => "Right",
-                crate::core::gesture::GestureDir::UpLeft => "UpLeft",
-                crate::core::gesture::GestureDir::UpRight => "UpRight",
-                crate::core::gesture::GestureDir::DownLeft => "DownLeft",
-                crate::core::gesture::GestureDir::DownRight => "DownRight",
-            })
+            .map(|dir| dir.dir_name())
             .collect::<Vec<_>>()
-            .join(" → ")
+            .join(crate::core::gesture::GESTURE_DIR_SEPARATOR)
     }
 
-    /// Convert gesture to string with modifiers
+    /// Convert gesture to string with modifiers (includes trigger button prefix)
     fn gesture_to_string_with_modifiers(gesture: &Gesture) -> String {
         let mut parts = Vec::new();
 
-        // Add directions
+        // Add directions with button prefix
         parts.push(Self::gesture_to_string(gesture));
 
         // Add modifiers
@@ -222,7 +245,7 @@ impl GestureIntentFinder {
         }
 
         // Check global
-        self.config.global_gestures.get(gesture_str)
+        self.global_cache.get(gesture_str)
     }
 
     /// Get the configuration
@@ -253,7 +276,30 @@ mod tests {
         gesture.add_direction(GestureDir::Down);
 
         let gesture_str = GestureIntentFinder::gesture_to_string(&gesture);
-        assert_eq!(gesture_str, "Right → Down");
+        assert_eq!(gesture_str, "M_Right → Down");
+    }
+
+    #[test]
+    fn test_gesture_to_string_different_buttons() {
+        use crate::core::gesture::{GestureDir, GestureTriggerButton};
+
+        let mut gesture_r = Gesture::new(GestureTriggerButton::Right);
+        gesture_r.add_direction(GestureDir::Right);
+        assert_eq!(
+            GestureIntentFinder::gesture_to_string(&gesture_r),
+            "R_Right"
+        );
+
+        let mut gesture_x1 = Gesture::new(GestureTriggerButton::X1);
+        gesture_x1.add_direction(GestureDir::Up);
+        assert_eq!(GestureIntentFinder::gesture_to_string(&gesture_x1), "X1_Up");
+
+        let mut gesture_x2 = Gesture::new(GestureTriggerButton::X2);
+        gesture_x2.add_direction(GestureDir::Down);
+        assert_eq!(
+            GestureIntentFinder::gesture_to_string(&gesture_x2),
+            "X2_Down"
+        );
     }
 
     #[test]
@@ -265,7 +311,34 @@ mod tests {
         gesture.add_modifier(GestureModifier::WheelForward);
 
         let gesture_str = GestureIntentFinder::gesture_to_string_with_modifiers(&gesture);
-        assert_eq!(gesture_str, "Up + WheelForward");
+        assert_eq!(gesture_str, "M_Up + WheelForward");
+    }
+
+    #[test]
+    fn test_find_with_button_matching() {
+        use crate::core::gesture::{GestureDir, GestureTriggerButton};
+
+        let config = GestureConfig::default();
+        let finder = GestureIntentFinder::new(config);
+
+        // Default config has "M_Right" for Middle button
+        let mut gesture_m = Gesture::new(GestureTriggerButton::Middle);
+        gesture_m.add_direction(GestureDir::Right);
+        assert!(finder.find(&gesture_m, None).is_some());
+
+        // Right button with same direction should not match button-specific entry
+        // but might match direction-only fallback if present
+        let mut gesture_r = Gesture::new(GestureTriggerButton::Right);
+        gesture_r.add_direction(GestureDir::Right);
+        // No "R_Right" in config, but might fall back to "Right"
+        let result = finder.find(&gesture_r, None);
+        // Depending on backward compat, this could match or not
+        // Since default config only has "M_" prefixed keys, no "Right" fallback exists
+        // So this should NOT match
+        assert!(
+            result.is_none(),
+            "Right button gesture should not match Middle button config"
+        );
     }
 
     #[test]
