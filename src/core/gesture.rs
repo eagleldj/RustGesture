@@ -38,7 +38,24 @@ pub enum GestureDir {
     DownRight,
 }
 
+/// Separator used in gesture direction keys (e.g., "Right → Down")
+pub const GESTURE_DIR_SEPARATOR: &str = " → ";
+
 impl GestureDir {
+    /// Get the direction name used as config key (e.g., "Up", "Down", "UpLeft")
+    pub fn dir_name(&self) -> &'static str {
+        match self {
+            GestureDir::Up => "Up",
+            GestureDir::Down => "Down",
+            GestureDir::Left => "Left",
+            GestureDir::Right => "Right",
+            GestureDir::UpLeft => "UpLeft",
+            GestureDir::UpRight => "UpRight",
+            GestureDir::DownLeft => "DownLeft",
+            GestureDir::DownRight => "DownRight",
+        }
+    }
+
     /// Check if this is a diagonal direction
     pub fn is_diagonal(&self) -> bool {
         matches!(
@@ -272,6 +289,13 @@ mod tests {
         let p1 = Point::new(0, 0);
         let p2 = Point::new(3, 4);
         assert_eq!(p1.distance_to(&p2), 5.0);
+    }
+
+    #[test]
+    fn test_dir_name() {
+        assert_eq!(GestureDir::Up.dir_name(), "Up");
+        assert_eq!(GestureDir::DownRight.dir_name(), "DownRight");
+        assert_eq!(GestureDir::Left.dir_name(), "Left");
     }
 
     #[test]

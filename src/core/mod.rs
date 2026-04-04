@@ -14,3 +14,4 @@ pub mod intent;
 pub mod executor;
 pub mod app;
 pub mod hook_callback;
+pub mod capture;
