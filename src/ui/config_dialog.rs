@@ -12,7 +12,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use tracing::{error, info};
 
 use crate::config::config::{
-    Action, GestureConfig, KeyboardAction, MouseAction, MouseButton, MouseActionType,
+    Action, GestureConfig, GestureEntry, KeyboardAction, MouseAction, MouseActionType, MouseButton,
     RunAction, WindowAction, WindowCommand,
 };
 
@@ -83,7 +83,20 @@ fn gesture_name_to_mnemonic(name: &str) -> String {
     .cloned()
     .collect();
 
-    name.split(" -> ")
+    let button_map: HashMap<&str, &str> = [("M_", "M"), ("R_", "R"), ("X1_", "X1"), ("X2_", "X2")]
+        .iter()
+        .cloned()
+        .collect();
+
+    // Extract button prefix and directions
+    let (button_label, rest) = button_map
+        .iter()
+        .find(|(prefix, _)| name.starts_with(*prefix))
+        .map(|(prefix, label)| (*label, &name[prefix.len()..]))
+        .unwrap_or(("", name));
+
+    let arrows: String = rest
+        .split(" → ")
         .map(|part| {
             dir_map
                 .get(part.trim())
@@ -91,23 +104,48 @@ fn gesture_name_to_mnemonic(name: &str) -> String {
                 .unwrap_or_else(|| part.trim().to_string())
         })
         .collect::<Vec<_>>()
-        .join("")
+        .join("");
+
+    if button_label.is_empty() {
+        arrows
+    } else {
+        format!("{} {}", button_label, arrows)
+    }
 }
 
-/// Convert direction button index to gesture direction name.
-/// Indices: 0=Up, 1=Down, 2=Left, 3=Right, 4=UpLeft, 5=UpRight, 6=DownLeft, 7=DownRight
-fn direction_index_to_name(idx: i32) -> &'static str {
-    match idx {
-        0 => "Up",
-        1 => "Down",
-        2 => "Left",
-        3 => "Right",
-        4 => "UpLeft",
-        5 => "UpRight",
-        6 => "DownLeft",
-        7 => "DownRight",
-        _ => "",
+/// Parse a gesture key into trigger button and directions.
+/// "M_Right → Down" → (Middle, ["Right", "Down"])
+/// "R_Up" → (Right, ["Up"])
+/// "Up" (legacy, no prefix) → (Middle, ["Up"])
+fn parse_gesture_key(key: &str) -> (crate::core::gesture::GestureTriggerButton, Vec<String>) {
+    use crate::core::gesture::GestureTriggerButton;
+
+    let prefixes: [(&str, GestureTriggerButton); 4] = [
+        ("M_", GestureTriggerButton::Middle),
+        ("R_", GestureTriggerButton::Right),
+        ("X1_", GestureTriggerButton::X1),
+        ("X2_", GestureTriggerButton::X2),
+    ];
+
+    for (prefix, button) in &prefixes {
+        if key.starts_with(prefix) {
+            let rest = &key[prefix.len()..];
+            let dirs: Vec<String> = rest
+                .split(" → ")
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            return (*button, dirs);
+        }
     }
+
+    // Legacy format without prefix - default to Middle button
+    let dirs: Vec<String> = key
+        .split(" → ")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    (GestureTriggerButton::Middle, dirs)
 }
 
 fn action_to_type_index(action: &Action) -> i32 {
@@ -156,7 +194,10 @@ fn vk_to_display_name(vk: &str) -> String {
 
 /// Format keyboard keys as friendly display string, e.g. "Ctrl + Alt + F1"
 fn format_keys_display(keys: &[String]) -> String {
-    keys.iter().map(|k| vk_to_display_name(k)).collect::<Vec<_>>().join(" + ")
+    keys.iter()
+        .map(|k| vk_to_display_name(k))
+        .collect::<Vec<_>>()
+        .join(" + ")
 }
 
 fn action_to_detail(action: &Action) -> String {
@@ -257,6 +298,27 @@ fn index_to_window_command(idx: i32) -> WindowCommand {
     }
 }
 
+/// Convert GestureTriggerButton to radio button index (0=Middle, 1=Right, 2=X1, 3=X2)
+fn trigger_button_to_index(button: &crate::core::gesture::GestureTriggerButton) -> i32 {
+    match button {
+        crate::core::gesture::GestureTriggerButton::Middle => 0,
+        crate::core::gesture::GestureTriggerButton::Right => 1,
+        crate::core::gesture::GestureTriggerButton::X1 => 2,
+        crate::core::gesture::GestureTriggerButton::X2 => 3,
+    }
+}
+
+/// Convert radio button index to GestureTriggerButton
+fn index_to_trigger_button(index: i32) -> crate::core::gesture::GestureTriggerButton {
+    match index {
+        0 => crate::core::gesture::GestureTriggerButton::Middle,
+        1 => crate::core::gesture::GestureTriggerButton::Right,
+        2 => crate::core::gesture::GestureTriggerButton::X1,
+        3 => crate::core::gesture::GestureTriggerButton::X2,
+        _ => crate::core::gesture::GestureTriggerButton::Middle,
+    }
+}
+
 // ---------- Internal state ----------
 
 struct DialogState {
@@ -266,6 +328,7 @@ struct DialogState {
     app_names: Vec<String>,
     // Edit dialog state
     edit_directions: Vec<String>,
+    edit_trigger_button: crate::core::gesture::GestureTriggerButton,
     edit_original_name: Option<String>,
 }
 
@@ -291,7 +354,7 @@ impl DialogState {
         names
     }
 
-    fn gesture_map_for_app(&self, app_name: &str) -> HashMap<String, Action> {
+    fn gesture_map_for_app(&self, app_name: &str) -> HashMap<String, GestureEntry> {
         if app_name == "global" {
             self.config.global_gestures.clone()
         } else {
@@ -303,16 +366,16 @@ impl DialogState {
         }
     }
 
-    fn set_gesture(&mut self, gesture_name: String, action: Action) {
+    fn set_gesture(&mut self, gesture_name: String, entry: GestureEntry) {
         let app = &self.current_app;
         if app == "global" {
-            self.config.global_gestures.insert(gesture_name, action);
+            self.config.global_gestures.insert(gesture_name, entry);
         } else {
             self.config
                 .app_gestures
                 .entry(app.clone())
                 .or_default()
-                .insert(gesture_name, action);
+                .insert(gesture_name, entry);
         }
         if let Err(e) = self.save_config() {
             error!("Auto-save failed: {}", e);
@@ -331,9 +394,9 @@ impl DialogState {
         }
     }
 
-    fn gesture_pairs(&self) -> Vec<(String, Action)> {
+    fn gesture_pairs(&self) -> Vec<(String, GestureEntry)> {
         let map = self.gesture_map_for_app(&self.current_app);
-        let mut pairs: Vec<(String, Action)> = map.into_iter().collect();
+        let mut pairs: Vec<(String, GestureEntry)> = map.into_iter().collect();
         pairs.sort_by(|a, b| a.0.cmp(&b.0));
         pairs
     }
@@ -369,12 +432,17 @@ fn build_gesture_model(state: &DialogState) -> slint::ModelRc<GestureItem> {
     let pairs = state.gesture_pairs();
     let items: Vec<GestureItem> = pairs
         .iter()
-        .map(|(name, action)| {
+        .map(|(name, entry)| {
+            let display_name = if entry.name.is_empty() {
+                name.as_str()
+            } else {
+                entry.name.as_str()
+            };
             let item = GestureItem {
-                name: SharedString::from(name.as_str()),
+                name: SharedString::from(display_name),
                 mnemonic: SharedString::from(gesture_name_to_mnemonic(name).as_str()),
-                action_type: SharedString::from(action_type_display(action).as_str()),
-                action_params: SharedString::from(action_params_display(action).as_str()),
+                action_type: SharedString::from(action_type_display(&entry.action).as_str()),
+                action_params: SharedString::from(action_params_display(&entry.action).as_str()),
             };
             info!(
                 "GestureItem: name='{}', mnemonic='{}', type='{}', params='{}'",
@@ -422,6 +490,7 @@ fn run_settings_window(config_path: &PathBuf) {
         current_app,
         app_names,
         edit_directions: Vec::new(),
+        edit_trigger_button: crate::core::gesture::GestureTriggerButton::Middle,
         edit_original_name: None,
     }));
 
@@ -463,6 +532,49 @@ fn run_settings_window(config_path: &PathBuf) {
 
     setup_callbacks(&window, &state);
 
+    // Timer to poll for gesture capture results
+    let capture_state = state.clone();
+    let capture_window_weak = window.as_weak();
+    let _capture_timer = slint::Timer::default();
+    _capture_timer.start(
+        slint::TimerMode::Repeated,
+        std::time::Duration::from_millis(100),
+        move || {
+            if let Some(win) = capture_window_weak.upgrade() {
+                if !win.get_edit_dialog_visible() || !win.get_edit_capturing() {
+                    return;
+                }
+
+                if let Some(captured) = crate::core::capture::take_capture_result() {
+                    // Store directions and trigger button in state
+                    {
+                        let mut st = capture_state.borrow_mut();
+                        st.edit_directions = captured.directions.clone();
+                        st.edit_trigger_button = captured.trigger_button;
+                    }
+                    // Build gesture key with button prefix
+                    let button_prefix = match captured.trigger_button {
+                        crate::core::gesture::GestureTriggerButton::Right => "R_",
+                        crate::core::gesture::GestureTriggerButton::Middle => "M_",
+                        crate::core::gesture::GestureTriggerButton::X1 => "X1_",
+                        crate::core::gesture::GestureTriggerButton::X2 => "X2_",
+                    };
+                    let display = gesture_name_to_mnemonic(&format!(
+                        "{}{}",
+                        button_prefix,
+                        captured.directions.join(" → ")
+                    ));
+                    win.set_edit_direction_display(SharedString::from(display.as_str()));
+                    win.set_edit_has_directions(true);
+                    win.set_edit_capturing(false);
+                    win.set_edit_trigger_button_index(trigger_button_to_index(
+                        &captured.trigger_button,
+                    ));
+                }
+            }
+        },
+    );
+
     if let Err(e) = window.run() {
         error!("Slint window error: {:?}", e);
     }
@@ -501,9 +613,9 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
         if idx < 0 || (idx as usize) >= pairs.len() {
             return;
         }
-        let (_, action) = &pairs[idx as usize];
-        let type_idx = action_to_type_index(action);
-        let detail = action_to_detail(action);
+        let (_, entry) = &pairs[idx as usize];
+        let type_idx = action_to_type_index(&entry.action);
+        let detail = action_to_detail(&entry.action);
         if let Some(win) = window_weak.upgrade() {
             win.set_selected_gesture_index(idx);
             win.set_current_action_type_index(type_idx);
@@ -523,7 +635,10 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
                 .as_secs()
         );
         let mut st = state_cb.borrow_mut();
-        st.config.app_gestures.entry(new_app.clone()).or_insert_with(HashMap::new);
+        st.config
+            .app_gestures
+            .entry(new_app.clone())
+            .or_insert_with(HashMap::new);
         if let Err(e) = st.save_config() {
             error!("Auto-save failed: {}", e);
         }
@@ -550,11 +665,14 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
         st.edit_original_name = None;
         if let Some(win) = window_weak.upgrade() {
             win.set_edit_dialog_title(SharedString::from("添加手势"));
+            win.set_edit_gesture_name(SharedString::from(""));
             win.set_edit_direction_display(SharedString::from(""));
             win.set_edit_has_directions(false);
+            win.set_edit_capturing(false);
             win.set_edit_action_type_index(0);
             win.set_edit_action_detail(SharedString::from(""));
             win.set_edit_window_command_index(0);
+            win.set_edit_trigger_button_index(0);
             win.set_edit_dialog_visible(true);
         }
     });
@@ -584,39 +702,62 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     let window_weak = window.as_weak();
     window.on_edit_gesture_clicked(move |idx: i32| {
         // Read data from state
-        let (directions, original_name, display, type_idx, detail, window_cmd_idx) = {
+        let (
+            trigger_button,
+            directions,
+            original_name,
+            entry_name,
+            display,
+            type_idx,
+            detail,
+            window_cmd_idx,
+        ) = {
             let st = state_cb.borrow();
             let pairs = st.gesture_pairs();
             if idx < 0 || (idx as usize) >= pairs.len() {
                 return;
             }
-            let (name, action) = &pairs[idx as usize];
-            let dirs: Vec<String> = name.split(" -> ").map(|s| s.trim().to_string()).collect();
+            let (name, entry) = &pairs[idx as usize];
+            // Parse key: "M_Right → Down" → trigger_button=Middle, dirs=["Right", "Down"]
+            let (tb, dirs) = parse_gesture_key(name);
             let disp = gesture_name_to_mnemonic(name);
-            let t_idx = action_to_type_index(action);
-            let det = action_to_detail(action);
-            let wc_idx = match action {
+            let t_idx = action_to_type_index(&entry.action);
+            let det = action_to_detail(&entry.action);
+            let wc_idx = match &entry.action {
                 Action::Window(w) => window_command_to_index(&w.command),
                 _ => 0,
             };
-            (dirs, name.clone(), disp, t_idx, det, wc_idx)
+            (
+                tb,
+                dirs,
+                name.clone(),
+                entry.name.clone(),
+                disp,
+                t_idx,
+                det,
+                wc_idx,
+            )
         };
 
         // Update edit state
         {
             let mut st = state_cb.borrow_mut();
             st.edit_directions = directions;
+            st.edit_trigger_button = trigger_button;
             st.edit_original_name = Some(original_name);
         }
 
         // Show dialog
         if let Some(win) = window_weak.upgrade() {
             win.set_edit_dialog_title(SharedString::from("编辑手势"));
+            win.set_edit_gesture_name(SharedString::from(entry_name.as_str()));
             win.set_edit_direction_display(SharedString::from(display.as_str()));
             win.set_edit_has_directions(true);
+            win.set_edit_capturing(false);
             win.set_edit_action_type_index(type_idx);
             win.set_edit_action_detail(SharedString::from(detail.as_str()));
             win.set_edit_window_command_index(window_cmd_idx);
+            win.set_edit_trigger_button_index(trigger_button_to_index(&trigger_button));
             win.set_edit_dialog_visible(true);
         }
     });
@@ -626,7 +767,10 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     let window_weak = window.as_weak();
     window.on_action_type_changed(move |new_type_idx: i32| {
         let mut st = state_cb.borrow_mut();
-        let selected_idx = window_weak.upgrade().map(|w| w.get_selected_gesture_index()).unwrap_or(-1);
+        let selected_idx = window_weak
+            .upgrade()
+            .map(|w| w.get_selected_gesture_index())
+            .unwrap_or(-1);
         if selected_idx < 0 {
             return;
         }
@@ -634,8 +778,8 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
         if (selected_idx as usize) >= pairs.len() {
             return;
         }
-        let (gesture_name, old_action) = &pairs[selected_idx as usize];
-        let detail = action_to_detail(old_action);
+        let (gesture_name, old_entry) = &pairs[selected_idx as usize];
+        let detail = action_to_detail(&old_entry.action);
         let new_action = match new_type_idx {
             0 => Action::Keyboard(crate::config::config::KeyboardAction { keys: vec![detail] }),
             1 => Action::Mouse(crate::config::config::MouseAction {
@@ -645,10 +789,17 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             2 => Action::Window(crate::config::config::WindowAction {
                 command: crate::config::config::WindowCommand::Minimize,
             }),
-            3 => Action::Run(crate::config::config::RunAction { command: detail, args: None }),
+            3 => Action::Run(crate::config::config::RunAction {
+                command: detail,
+                args: None,
+            }),
             _ => return,
         };
-        st.set_gesture(gesture_name.clone(), new_action);
+        let new_entry = GestureEntry {
+            name: old_entry.name.clone(),
+            action: new_action,
+        };
+        st.set_gesture(gesture_name.clone(), new_entry);
         if let Some(win) = window_weak.upgrade() {
             win.set_gesture_list(build_gesture_model(&st));
         }
@@ -660,7 +811,10 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     window.on_action_detail_changed(move |new_detail: SharedString| {
         let detail_str = new_detail.to_string();
         let mut st = state_cb.borrow_mut();
-        let selected_idx = window_weak.upgrade().map(|w| w.get_selected_gesture_index()).unwrap_or(-1);
+        let selected_idx = window_weak
+            .upgrade()
+            .map(|w| w.get_selected_gesture_index())
+            .unwrap_or(-1);
         if selected_idx < 0 {
             return;
         }
@@ -668,11 +822,14 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
         if (selected_idx as usize) >= pairs.len() {
             return;
         }
-        let (gesture_name, old_action) = &pairs[selected_idx as usize];
-        let type_idx = action_to_type_index(old_action);
+        let (gesture_name, old_entry) = &pairs[selected_idx as usize];
+        let type_idx = action_to_type_index(&old_entry.action);
         let new_action = match type_idx {
             0 => Action::Keyboard(crate::config::config::KeyboardAction {
-                keys: detail_str.split('+').map(|s| s.trim().to_string()).collect(),
+                keys: detail_str
+                    .split('+')
+                    .map(|s| s.trim().to_string())
+                    .collect(),
             }),
             1 => Action::Mouse(crate::config::config::MouseAction {
                 button: crate::config::config::MouseButton::Left,
@@ -681,30 +838,34 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             2 => Action::Window(crate::config::config::WindowAction {
                 command: crate::config::config::WindowCommand::Minimize,
             }),
-            3 => Action::Run(crate::config::config::RunAction { command: detail_str, args: None }),
+            3 => Action::Run(crate::config::config::RunAction {
+                command: detail_str,
+                args: None,
+            }),
             _ => return,
         };
-        st.set_gesture(gesture_name.clone(), new_action);
+        let new_entry = GestureEntry {
+            name: old_entry.name.clone(),
+            action: new_action,
+        };
+        st.set_gesture(gesture_name.clone(), new_entry);
         if let Some(win) = window_weak.upgrade() {
             win.set_gesture_list(build_gesture_model(&st));
         }
     });
 
-    // --- edit-direction-clicked ---
-    let state_cb = state.clone();
+    // --- edit-capture-clicked ---
     let window_weak = window.as_weak();
-    window.on_edit_direction_clicked(move |dir_idx: i32| {
-        let dir_name = direction_index_to_name(dir_idx);
-        if dir_name.is_empty() {
-            return;
-        }
-        let mut st = state_cb.borrow_mut();
-        st.edit_directions.push(dir_name.to_string());
-        let display = gesture_name_to_mnemonic(&st.edit_directions.join(" -> "));
-        drop(st);
+    window.on_edit_capture_clicked(move || {
         if let Some(win) = window_weak.upgrade() {
-            win.set_edit_direction_display(SharedString::from(display.as_str()));
-            win.set_edit_has_directions(true);
+            let currently_capturing = win.get_edit_capturing();
+            if currently_capturing {
+                crate::core::capture::cancel_capture();
+                win.set_edit_capturing(false);
+            } else {
+                crate::core::capture::start_capture();
+                win.set_edit_capturing(true);
+            }
         }
     });
 
@@ -712,12 +873,14 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     let state_cb = state.clone();
     let window_weak = window.as_weak();
     window.on_edit_clear_directions(move || {
+        crate::core::capture::cancel_capture();
         let mut st = state_cb.borrow_mut();
         st.edit_directions.clear();
         drop(st);
         if let Some(win) = window_weak.upgrade() {
             win.set_edit_direction_display(SharedString::from(""));
             win.set_edit_has_directions(false);
+            win.set_edit_capturing(false);
         }
     });
 
@@ -725,18 +888,30 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     let state_cb = state.clone();
     let window_weak = window.as_weak();
     window.on_edit_dialog_confirmed(move || {
+        // Cancel any active capture
+        crate::core::capture::cancel_capture();
         // Read values from window before borrowing state
-        let (action_type_idx, action_detail, window_cmd_idx) = {
+        let (
+            action_type_idx,
+            action_detail,
+            window_cmd_idx,
+            gesture_name_input,
+            trigger_button_idx,
+        ) = {
             if let Some(win) = window_weak.upgrade() {
                 (
                     win.get_edit_action_type_index(),
                     win.get_edit_action_detail().to_string(),
                     win.get_edit_window_command_index(),
+                    win.get_edit_gesture_name().to_string(),
+                    win.get_edit_trigger_button_index(),
                 )
             } else {
                 return;
             }
         };
+
+        let trigger_button = index_to_trigger_button(trigger_button_idx);
 
         let mut st = state_cb.borrow_mut();
 
@@ -745,11 +920,19 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             return;
         }
 
-        let gesture_name = st.edit_directions.join(" -> ");
+        // Build gesture key with button prefix (e.g., "M_Right → Down")
+        let button_prefix = match trigger_button {
+            crate::core::gesture::GestureTriggerButton::Right => "R_",
+            crate::core::gesture::GestureTriggerButton::Middle => "M_",
+            crate::core::gesture::GestureTriggerButton::X1 => "X1_",
+            crate::core::gesture::GestureTriggerButton::X2 => "X2_",
+        };
+        st.edit_trigger_button = trigger_button;
+        let gesture_key = format!("{}{}", button_prefix, st.edit_directions.join(" → "));
 
-        // If editing and name changed, remove old gesture
+        // If editing and key changed, remove old gesture
         let old_name_to_remove = st.edit_original_name.as_ref().and_then(|original_name| {
-            if original_name != &gesture_name {
+            if original_name != &gesture_key {
                 Some(original_name.clone())
             } else {
                 None
@@ -771,7 +954,10 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
                     keys: if action_detail.is_empty() {
                         vec!["VK_UNKNOWN".to_string()]
                     } else {
-                        action_detail.split('+').map(|s| s.trim().to_string()).collect()
+                        action_detail
+                            .split('+')
+                            .map(|s| s.trim().to_string())
+                            .collect()
                     },
                 }),
                 1 => Action::Mouse(MouseAction {
@@ -790,7 +976,11 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             }
         };
 
-        st.set_gesture(gesture_name, new_action);
+        let entry = GestureEntry {
+            name: gesture_name_input,
+            action: new_action,
+        };
+        st.set_gesture(gesture_key, entry);
 
         let gesture_model = build_gesture_model(&st);
         st.edit_original_name = None;
@@ -800,6 +990,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             win.set_gesture_list(gesture_model);
             win.set_selected_gesture_index(-1);
             win.set_edit_has_directions(false);
+            win.set_edit_capturing(false);
             win.set_edit_dialog_visible(false);
         }
     });
@@ -808,12 +999,14 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
     let state_cb = state.clone();
     let window_weak = window.as_weak();
     window.on_edit_dialog_cancelled(move || {
+        crate::core::capture::cancel_capture();
         let mut st = state_cb.borrow_mut();
         st.edit_directions.clear();
         st.edit_original_name = None;
         drop(st);
         if let Some(win) = window_weak.upgrade() {
             win.set_edit_has_directions(false);
+            win.set_edit_capturing(false);
             win.set_edit_dialog_visible(false);
         }
     });

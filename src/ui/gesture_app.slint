@@ -232,33 +232,52 @@ component GestureRow inherits Rectangle {
     }
 }
 
-// Direction selection button for the gesture editor dialog
-component DirButton inherits Rectangle {
-    width: 50px;
-    height: 50px;
+// Custom radio button component
+component RadioButton inherits Rectangle {
+    height: 24px;
+    in property <bool> checked: false;
     in property <string> label: "";
-    in property <bool> is-center: false;
-    callback clicked();
+    callback toggled();
 
-    background: is-center ? #fff3e0 : (dir-ta.has-hover ? #e0e0e0 : #f0f0f0);
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: #d0d0d0;
-
-    dir-ta := TouchArea {
+    HorizontalLayout {
         width: 100%;
         height: 100%;
-        clicked => { root.clicked(); }
+        spacing: 4px;
+
+        // Radio circle
+        Rectangle {
+            width: 16px;
+            height: 16px;
+            y: (parent.height - 16px) / 2;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: root.checked ? #0078d4 : #999999;
+            background: transparent;
+
+            // Inner dot when checked
+            if root.checked: Rectangle {
+                width: 8px;
+                height: 8px;
+                x: (parent.width - 8px) / 2;
+                y: (parent.height - 8px) / 2;
+                border-radius: 4px;
+                background: #0078d4;
+            }
+        }
+
+        // Label text
+        Text {
+            text: root.label;
+            font-size: 12px;
+            color: root.checked ? #0078d4 : #555555;
+            vertical-alignment: center;
+        }
     }
 
-    Text {
-        text: root.label;
-        font-size: root.is-center ? 11px : 20px;
-        color: root.is-center ? #e65100 : #333333;
-        horizontal-alignment: center;
-        vertical-alignment: center;
+    ta := TouchArea {
         width: 100%;
         height: 100%;
+        clicked => { root.toggled(); }
     }
 }
 
@@ -300,8 +319,10 @@ export component GestureAppWindow inherits Window {
 
     in-out property <bool> edit-dialog-visible: false;
     in-out property <string> edit-dialog-title: "添加手势";
+    in-out property <string> edit-gesture-name: "";
     in-out property <string> edit-direction-display: "";
     in-out property <bool> edit-has-directions: false;
+    in-out property <bool> edit-capturing: false;
     in-out property <int> edit-action-type-index: 0;
     in-out property <string> edit-action-detail: "";
 
@@ -314,6 +335,8 @@ export component GestureAppWindow inherits Window {
     ];
 
     in-out property <int> edit-window-command-index: 0;
+
+    in-out property <int> edit-trigger-button-index: 0;
 
     // --- Callbacks ---
 
@@ -329,7 +352,7 @@ export component GestureAppWindow inherits Window {
     callback action-detail-changed(string);
 
     // Edit dialog callbacks
-    callback edit-direction-clicked(int);
+    callback edit-capture-clicked();
     callback edit-clear-directions();
     callback edit-dialog-confirmed();
     callback edit-dialog-cancelled();
@@ -556,9 +579,9 @@ export component GestureAppWindow inherits Window {
         // Dialog box centered
         dialog-box := Rectangle {
             width: 400px;
-            height: 440px;
+            height: 480px;
             x: (parent.width - 400px) / 2;
-            y: (parent.height - 440px) / 2;
+            y: (parent.height - 480px) / 2;
             background: #ffffff;
             border-radius: 8px;
             border-width: 1px;
@@ -640,113 +663,154 @@ export component GestureAppWindow inherits Window {
                     padding-bottom: 16px;
                     spacing: 10px;
 
-                    // Direction label
-                    Text {
-                        text: "手势方向:";
-                        font-size: 12px;
-                        color: #555555;
-                    }
-
-                    // Direction grid (3x3, centered)
-                    HorizontalLayout {
-                        alignment: center;
-                        height: 162px;
-
-                        VerticalLayout {
-                            width: 162px;
-                            spacing: 4px;
-                            alignment: center;
-
-                            // Row 0: UpLeft, Up, UpRight
-                            HorizontalLayout {
-                                height: 50px;
-                                spacing: 4px;
-
-                                DirButton {
-                                    label: "↖";
-                                    clicked => { root.edit-direction-clicked(4); }
-                                }
-                                DirButton {
-                                    label: "↑";
-                                    clicked => { root.edit-direction-clicked(0); }
-                                }
-                                DirButton {
-                                    label: "↗";
-                                    clicked => { root.edit-direction-clicked(5); }
-                                }
-                            }
-
-                            // Row 1: Left, Clear, Right
-                            HorizontalLayout {
-                                height: 50px;
-                                spacing: 4px;
-
-                                DirButton {
-                                    label: "←";
-                                    clicked => { root.edit-direction-clicked(2); }
-                                }
-                                DirButton {
-                                    label: "清除";
-                                    is-center: true;
-                                    clicked => { root.edit-clear-directions(); }
-                                }
-                                DirButton {
-                                    label: "→";
-                                    clicked => { root.edit-direction-clicked(3); }
-                                }
-                            }
-
-                            // Row 2: DownLeft, Down, DownRight
-                            HorizontalLayout {
-                                height: 50px;
-                                spacing: 4px;
-
-                                DirButton {
-                                    label: "↙";
-                                    clicked => { root.edit-direction-clicked(6); }
-                                }
-                                DirButton {
-                                    label: "↓";
-                                    clicked => { root.edit-direction-clicked(1); }
-                                }
-                                DirButton {
-                                    label: "↘";
-                                    clicked => { root.edit-direction-clicked(7); }
-                                }
-                            }
-                        }
-                    }
-
-                    // Current direction sequence display
+                    // 手势名称
                     HorizontalLayout {
                         height: 32px;
                         spacing: 8px;
 
                         Text {
-                            text: "当前序列:";
+                            text: "手势名称:";
                             font-size: 12px;
                             color: #555555;
                             vertical-alignment: center;
                             width: 64px;
                         }
 
+                        LineEdit {
+                            text: root.edit-gesture-name;
+                            edited => {
+                                root.edit-gesture-name = self.text;
+                            }
+                        }
+                    }
+
+                    // 触发按键
+                    HorizontalLayout {
+                        height: 28px;
+                        spacing: 8px;
+
+                        Text {
+                            text: "触发按键:";
+                            font-size: 12px;
+                            color: #555555;
+                            vertical-alignment: center;
+                            width: 64px;
+                        }
+
+                        HorizontalLayout {
+                            height: 28px;
+                            spacing: 16px;
+
+                            RadioButton {
+                                label: "中键";
+                                checked: root.edit-trigger-button-index == 0;
+                                toggled => { root.edit-trigger-button-index = 0; }
+                            }
+                            RadioButton {
+                                label: "右键";
+                                checked: root.edit-trigger-button-index == 1;
+                                toggled => { root.edit-trigger-button-index = 1; }
+                            }
+                            RadioButton {
+                                label: "X1";
+                                checked: root.edit-trigger-button-index == 2;
+                                toggled => { root.edit-trigger-button-index = 2; }
+                            }
+                            RadioButton {
+                                label: "X2";
+                                checked: root.edit-trigger-button-index == 3;
+                                toggled => { root.edit-trigger-button-index = 3; }
+                            }
+                        }
+                    }
+
+                    // 手势序列
+                    Text {
+                        text: "手势序列:";
+                        font-size: 12px;
+                        color: #555555;
+                    }
+
+                    // 捕捉状态显示区域
+                    HorizontalLayout {
+                        height: 40px;
+                        spacing: 8px;
+
                         Rectangle {
                             vertical-stretch: 1;
                             background: #f8f8f8;
                             border-radius: 4px;
                             border-width: 1px;
-                            border-color: #e0e0e0;
+                            border-color: root.edit-capturing ? #ffcc80 : #e0e0e0;
 
                             Text {
                                 text: root.edit-has-directions
                                     ? root.edit-direction-display
-                                    : "请点击方向按钮...";
+                                    : (root.edit-capturing ? "请用手势触发键画出方向..." : "点击右侧按钮捕捉手势");
                                 font-size: root.edit-has-directions ? 16px : 12px;
-                                color: root.edit-has-directions ? #0078d4 : #bbbbbb;
+                                color: root.edit-has-directions ? #0078d4 : (root.edit-capturing ? #e65100 : #bbbbbb);
                                 x: 10px;
                                 width: parent.width - 10px;
                                 height: 100%;
                                 vertical-alignment: center;
+                            }
+                        }
+
+                        // 捕捉按钮
+                        Rectangle {
+                            width: 80px;
+                            height: 36px;
+                            y: (parent.height - 36px) / 2;
+                            background: root.edit-capturing
+                                ? (capture-ta.has-hover ? #c62828 : #d32f2f)
+                                : (capture-ta.has-hover ? #1565c0 : #1976d2);
+                            border-radius: 4px;
+
+                            capture-ta := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => {
+                                    root.edit-capture-clicked();
+                                }
+                            }
+
+                            Text {
+                                text: root.edit-capturing ? "捕捉中..." : "开始捕捉";
+                                font-size: 12px;
+                                color: #ffffff;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+
+                        // 清除按钮
+                        Rectangle {
+                            width: 50px;
+                            height: 36px;
+                            y: (parent.height - 36px) / 2;
+                            background: clear-seq-ta.has-hover ? #e0e0e0 : #f0f0f0;
+                            border-radius: 4px;
+                            border-width: 1px;
+                            border-color: #d0d0d0;
+
+                            clear-seq-ta := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => {
+                                    root.edit-clear-directions();
+                                }
+                            }
+
+                            Text {
+                                text: "清除";
+                                font-size: 11px;
+                                color: #555555;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                width: 100%;
+                                height: 100%;
                             }
                         }
                     }
