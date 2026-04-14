@@ -200,6 +200,51 @@ fn format_keys_display(keys: &[String]) -> String {
         .join(" + ")
 }
 
+/// Convert a Windows VK code (integer) to (display_name, vk_string)
+fn vk_code_to_info(vk: i32) -> (String, String) {
+    match vk as u8 {
+        // A-Z (0x41-0x5A)
+        b @ 0x41..=0x5A => {
+            let ch = b as char;
+            (ch.to_string(), format!("VK_{}", ch))
+        }
+        // 0-9 (0x30-0x39)
+        b @ 0x30..=0x39 => {
+            let ch = b as char;
+            (ch.to_string(), format!("VK_{}", ch))
+        }
+        // F1-F12 (0x70-0x7B)
+        b @ 0x70..=0x7B => {
+            let n = b - 0x70 + 1;
+            (format!("F{}", n), format!("VK_F{}", n))
+        }
+        // Special keys
+        0x08 => ("Backspace".to_string(), "VK_BACK".to_string()),
+        0x09 => ("Tab".to_string(), "VK_TAB".to_string()),
+        0x0D => ("Enter".to_string(), "VK_RETURN".to_string()),
+        0x1B => ("Esc".to_string(), "VK_ESCAPE".to_string()),
+        0x20 => ("Space".to_string(), "VK_SPACE".to_string()),
+        0x21 => ("PageUp".to_string(), "VK_PRIOR".to_string()),
+        0x22 => ("PageDown".to_string(), "VK_NEXT".to_string()),
+        0x23 => ("End".to_string(), "VK_END".to_string()),
+        0x24 => ("Home".to_string(), "VK_HOME".to_string()),
+        0x25 => ("←".to_string(), "VK_LEFT".to_string()),
+        0x26 => ("↑".to_string(), "VK_UP".to_string()),
+        0x27 => ("→".to_string(), "VK_RIGHT".to_string()),
+        0x28 => ("↓".to_string(), "VK_DOWN".to_string()),
+        0x2C => ("PrtScn".to_string(), "VK_SNAPSHOT".to_string()),
+        0x2D => ("Insert".to_string(), "VK_INSERT".to_string()),
+        0x2E => ("Delete".to_string(), "VK_DELETE".to_string()),
+        // Numpad 0-9 (0x60-0x69)
+        b @ 0x60..=0x69 => {
+            let n = b - 0x60;
+            (format!("Num{}", n), format!("VK_NUMPAD{}", n))
+        }
+        // Other: use hex code
+        _ => (format!("0x{:02X}", vk), format!("VK_0x{:02X}", vk)),
+    }
+}
+
 fn action_to_detail(action: &Action) -> String {
     match action {
         Action::Keyboard(kb) => kb.keys.join("+"),
@@ -529,6 +574,7 @@ fn run_settings_window(config_path: &PathBuf) {
     window.set_edit_action_type_index(0);
     window.set_edit_action_detail(SharedString::from(""));
     window.set_edit_window_command_index(0);
+    window.set_edit_shortcut_display(SharedString::from(""));
 
     setup_callbacks(&window, &state);
 
@@ -570,6 +616,132 @@ fn run_settings_window(config_path: &PathBuf) {
                     win.set_edit_trigger_button_index(trigger_button_to_index(
                         &captured.trigger_button,
                     ));
+                }
+            }
+        },
+    );
+
+    // Timer to poll for keyboard shortcut capture via GetAsyncKeyState
+    let shortcut_window_weak = window.as_weak();
+    let shortcut_key_states = Rc::new(RefCell::new([false; 256]));
+    let _shortcut_timer = slint::Timer::default();
+    _shortcut_timer.start(
+        slint::TimerMode::Repeated,
+        std::time::Duration::from_millis(50),
+        move || {
+            use windows::Win32::UI::Input::KeyboardAndMouse::*;
+
+            if let Some(win) = shortcut_window_weak.upgrade() {
+                if !win.get_edit_shortcut_capturing() || !win.get_edit_dialog_visible() {
+                    return;
+                }
+
+                let mut prev = shortcut_key_states.borrow_mut();
+
+                // Modifier VK codes to skip
+                let modifier_vks: [usize; 10] = [
+                    VK_SHIFT.0 as usize,
+                    VK_LSHIFT.0 as usize,
+                    VK_RSHIFT.0 as usize,
+                    VK_CONTROL.0 as usize,
+                    VK_LCONTROL.0 as usize,
+                    VK_RCONTROL.0 as usize,
+                    VK_MENU.0 as usize,
+                    VK_LMENU.0 as usize,
+                    // VK_RMENU omitted intentionally
+                    VK_LWIN.0 as usize,
+                    VK_RWIN.0 as usize,
+                ];
+
+                // Scan for newly pressed non-modifier keys
+                for vk in 1u8..=254u8 {
+                    let vk_idx = vk as usize;
+
+                    // Skip modifier keys
+                    if modifier_vks.contains(&vk_idx) {
+                        continue;
+                    }
+
+                    let is_down = unsafe { GetAsyncKeyState(vk as i32) as u16 & 0x8000 != 0 };
+                    let was_down = prev[vk_idx];
+                    prev[vk_idx] = is_down;
+
+                    if is_down && !was_down {
+                        // Escape cancels capture
+                        if vk == VK_ESCAPE.0 as u8 {
+                            win.set_edit_shortcut_display(SharedString::from(""));
+                            win.set_edit_action_detail(SharedString::from(""));
+                            win.set_edit_shortcut_capturing(false);
+                            // Reset all states
+                            for s in prev.iter_mut() {
+                                *s = false;
+                            }
+                            return;
+                        }
+
+                        // Read current modifier state
+                        let ctrl =
+                            unsafe { GetAsyncKeyState(VK_CONTROL.0 as i32) as u16 & 0x8000 != 0 };
+                        let alt =
+                            unsafe { GetAsyncKeyState(VK_MENU.0 as i32) as u16 & 0x8000 != 0 };
+                        let shift =
+                            unsafe { GetAsyncKeyState(VK_SHIFT.0 as i32) as u16 & 0x8000 != 0 };
+                        let win_key =
+                            unsafe { GetAsyncKeyState(VK_LWIN.0 as i32) as u16 & 0x8000 != 0 };
+
+                        // Map VK code to display name and VK string
+                        let (key_display, key_vk) = vk_code_to_info(vk as i32);
+
+                        let mut display_parts: Vec<&str> = Vec::new();
+                        let mut vk_parts: Vec<String> = Vec::new();
+
+                        if win_key {
+                            display_parts.push("Win");
+                            vk_parts.push("VK_LWIN".to_string());
+                        }
+                        if ctrl {
+                            display_parts.push("Ctrl");
+                            vk_parts.push("VK_CONTROL".to_string());
+                        }
+                        if alt {
+                            display_parts.push("Alt");
+                            vk_parts.push("VK_MENU".to_string());
+                        }
+                        if shift {
+                            display_parts.push("Shift");
+                            vk_parts.push("VK_SHIFT".to_string());
+                        }
+
+                        let display_str = if display_parts.is_empty() {
+                            key_display.clone()
+                        } else {
+                            format!("{} + {}", display_parts.join(" + "), key_display)
+                        };
+                        vk_parts.push(key_vk);
+
+                        let vk_str = vk_parts.join("+");
+
+                        info!("Shortcut captured: display='{}', vk='{}'", display_str, vk_str);
+
+                        win.set_edit_shortcut_display(SharedString::from(display_str.as_str()));
+                        win.set_edit_action_detail(SharedString::from(vk_str.as_str()));
+                        win.set_edit_shortcut_capturing(false);
+
+                        // Reset all states
+                        for s in prev.iter_mut() {
+                            *s = false;
+                        }
+                        return;
+                    }
+                }
+
+                // Also update modifier key states
+                for &vk_idx in &modifier_vks {
+                    if vk_idx < 256 {
+                        let is_down =
+                            unsafe { GetAsyncKeyState(vk_idx as i32) as u16 & 0x8000 != 0 };
+                        prev[vk_idx] = is_down;
+                    }
                 }
             }
         },
@@ -673,6 +845,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             win.set_edit_action_detail(SharedString::from(""));
             win.set_edit_window_command_index(0);
             win.set_edit_trigger_button_index(0);
+            win.set_edit_shortcut_display(SharedString::from(""));
             win.set_edit_dialog_visible(true);
         }
     });
@@ -711,6 +884,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             type_idx,
             detail,
             window_cmd_idx,
+            shortcut_display,
         ) = {
             let st = state_cb.borrow();
             let pairs = st.gesture_pairs();
@@ -727,6 +901,10 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
                 Action::Window(w) => window_command_to_index(&w.command),
                 _ => 0,
             };
+            let sc_disp = match &entry.action {
+                Action::Keyboard(kb) => format_keys_display(&kb.keys),
+                _ => String::new(),
+            };
             (
                 tb,
                 dirs,
@@ -736,6 +914,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
                 t_idx,
                 det,
                 wc_idx,
+                sc_disp,
             )
         };
 
@@ -758,6 +937,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             win.set_edit_action_detail(SharedString::from(detail.as_str()));
             win.set_edit_window_command_index(window_cmd_idx);
             win.set_edit_trigger_button_index(trigger_button_to_index(&trigger_button));
+            win.set_edit_shortcut_display(SharedString::from(shortcut_display.as_str()));
             win.set_edit_dialog_visible(true);
         }
     });
@@ -1010,6 +1190,7 @@ fn setup_callbacks(window: &GestureAppWindow, state: &Rc<RefCell<DialogState>>) 
             win.set_edit_dialog_visible(false);
         }
     });
+
 }
 
 // ---------- Public API ----------
