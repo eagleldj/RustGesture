@@ -2,7 +2,7 @@
 //!
 //! This module matches recognized gestures to actions based on configuration.
 
-use crate::config::config::{Action, GestureConfig};
+use crate::config::config::{Action, GestureConfig, GestureEntry};
 use crate::core::gesture::{Gesture, GestureModifier};
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -12,6 +12,7 @@ use tracing::{debug, info};
 pub struct GestureIntent {
     pub gesture: Gesture,
     pub action: Action,
+    pub name: String,
 }
 
 impl GestureIntent {
@@ -25,9 +26,9 @@ impl GestureIntent {
 pub struct GestureIntentFinder {
     config: GestureConfig,
     // Cache gesture strings for faster lookup
-    global_cache: HashMap<String, Action>,
+    global_cache: HashMap<String, GestureEntry>,
     // App-specific caches
-    app_caches: HashMap<String, HashMap<String, Action>>,
+    app_caches: HashMap<String, HashMap<String, GestureEntry>>,
 }
 
 impl GestureIntentFinder {
@@ -50,11 +51,11 @@ impl GestureIntentFinder {
     }
 
     /// Build cache for global gestures
-    fn build_global_cache(config: &GestureConfig) -> HashMap<String, Action> {
+    fn build_global_cache(config: &GestureConfig) -> HashMap<String, GestureEntry> {
         let mut cache = HashMap::new();
 
         for (gesture_str, entry) in &config.global_gestures {
-            cache.insert(gesture_str.clone(), entry.action.clone());
+            cache.insert(gesture_str.clone(), entry.clone());
             debug!(
                 "Cached global gesture: {} -> {:?}",
                 gesture_str, entry.action
@@ -65,13 +66,13 @@ impl GestureIntentFinder {
     }
 
     /// Build caches for app-specific gestures
-    fn build_app_caches(config: &GestureConfig) -> HashMap<String, HashMap<String, Action>> {
+    fn build_app_caches(config: &GestureConfig) -> HashMap<String, HashMap<String, GestureEntry>> {
         let mut app_caches = HashMap::new();
 
         for (app_name, gestures) in &config.app_gestures {
             let mut cache = HashMap::new();
             for (gesture_str, entry) in gestures {
-                cache.insert(gesture_str.clone(), entry.action.clone());
+                cache.insert(gesture_str.clone(), entry.clone());
                 debug!(
                     "Cached app gesture: {} -> {} -> {:?}",
                     app_name, gesture_str, entry.action
@@ -105,22 +106,24 @@ impl GestureIntentFinder {
         // Priority 1: App-specific gestures (with button prefix)
         if let Some(app) = app_name {
             if let Some(app_cache) = self.app_caches.get(app) {
-                if let Some(action) = app_cache.get(&gesture_str) {
+                if let Some(entry) = app_cache.get(&gesture_str) {
                     debug!("Found app-specific gesture match for {}", app);
                     return Some(GestureIntent {
                         gesture: gesture.clone(),
-                        action: action.clone(),
+                        action: entry.action.clone(),
+                        name: entry.name.clone(),
                     });
                 }
             }
         }
 
         // Priority 2: Global gestures (with button prefix)
-        if let Some(action) = self.global_cache.get(&gesture_str) {
+        if let Some(entry) = self.global_cache.get(&gesture_str) {
             debug!("Found global gesture match (button-specific)");
             return Some(GestureIntent {
                 gesture: gesture.clone(),
-                action: action.clone(),
+                action: entry.action.clone(),
+                name: entry.name.clone(),
             });
         }
 
@@ -144,25 +147,27 @@ impl GestureIntentFinder {
         // Check app-specific first
         if let Some(app) = app_name {
             if let Some(app_cache) = self.app_caches.get(app) {
-                if let Some(action) = app_cache.get(&gesture_with_modifiers) {
+                if let Some(entry) = app_cache.get(&gesture_with_modifiers) {
                     debug!(
                         "Found app-specific gesture match with modifiers for {}",
                         app
                     );
                     return Some(GestureIntent {
                         gesture: gesture.clone(),
-                        action: action.clone(),
+                        action: entry.action.clone(),
+                        name: entry.name.clone(),
                     });
                 }
             }
         }
 
         // Check global
-        if let Some(action) = self.global_cache.get(&gesture_with_modifiers) {
+        if let Some(entry) = self.global_cache.get(&gesture_with_modifiers) {
             debug!("Found global gesture match with modifiers");
             return Some(GestureIntent {
                 gesture: gesture.clone(),
-                action: action.clone(),
+                action: entry.action.clone(),
+                name: entry.name.clone(),
             });
         }
 
@@ -238,14 +243,14 @@ impl GestureIntentFinder {
         // Check app-specific first
         if let Some(app) = app_name {
             if let Some(app_cache) = self.app_caches.get(app) {
-                if let Some(action) = app_cache.get(gesture_str) {
-                    return Some(action);
+                if let Some(entry) = app_cache.get(gesture_str) {
+                    return Some(&entry.action);
                 }
             }
         }
 
         // Check global
-        self.global_cache.get(gesture_str)
+        self.global_cache.get(gesture_str).map(|e| &e.action)
     }
 
     /// Get the configuration

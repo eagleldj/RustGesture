@@ -25,6 +25,7 @@ pub enum TrackerEvent {
     GestureCompleted(Gesture),
     GestureCancelled,
     ModifierDetected(GestureModifier),
+    PositionUpdate(Point),
 }
 
 /// Path tracker
@@ -213,6 +214,9 @@ impl PathTracker {
 
         self.last_point = Some(current_point);
         self.last_move_time = Some(Instant::now());
+
+        // Emit position update for overlay trail drawing
+        self.emit_event(TrackerEvent::PositionUpdate(current_point));
     }
 
     /// Handle mouse button up

@@ -11,6 +11,8 @@ use crate::core::{
     recognizer::{create_shared_recognizer, GestureRecognizerEvent, SharedRecognizer},
 };
 use crate::winapi::hook::MouseHook;
+use crate::winapi::overlay::{GestureOverlay, OverlayCommand};
+use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tracing::{debug, error, info, warn};
@@ -26,6 +28,7 @@ pub struct GestureApp {
     executor: CommandExecutor,
     hook: Option<MouseHook>,
     pub enabled: Arc<AtomicBool>,
+    overlay: GestureOverlay,
 }
 
 impl GestureApp {
@@ -46,16 +49,23 @@ impl GestureApp {
         // Create recognizer
         let recognizer = create_shared_recognizer(config.settings.clone());
 
+        // Create overlay
+        let overlay = GestureOverlay::new();
+
         // Create executor
         let executor = CommandExecutor::new();
 
         // Set up gesture recognition callback
         let intent_finder_clone = Arc::new(Mutex::new(GestureIntentFinder::new(config.clone())));
         let executor_clone = executor.clone(); // Executor needs to be cloned
+        let overlay_sender = overlay.sender();
+        let settings_clone = config.settings.clone();
 
         // Set event callback on recognizer
         {
             let mut recognizer = recognizer.lock().unwrap();
+            // Track last known mouse position for ShowName placement (captured by closure)
+            let last_pos = Cell::new((0i32, 0i32));
             recognizer.set_event_callback(move |event| {
                 match event {
                     GestureRecognizerEvent::GestureCompleted(gesture) => {
@@ -73,6 +83,7 @@ impl GestureApp {
                                 dirs, gesture.trigger_button
                             );
                             crate::core::capture::set_capture_result(dirs, gesture.trigger_button);
+                            let _ = overlay_sender.send(OverlayCommand::Clear);
                             return;
                         }
 
@@ -80,6 +91,20 @@ impl GestureApp {
                         let finder = intent_finder_clone.lock().unwrap();
                         if let Some(intent) = finder.find(&gesture, None) {
                             info!("🎯 {}", intent.action.display_info());
+
+                            // Show gesture name
+                            if settings_clone.show_gesture_name {
+                                let (lx, ly) = last_pos.get();
+                                let _ = overlay_sender.send(OverlayCommand::ShowName {
+                                    name: if intent.name.is_empty() {
+                                        intent.action.display_info()
+                                    } else {
+                                        intent.name.clone()
+                                    },
+                                    x: lx,
+                                    y: ly,
+                                });
+                            }
 
                             // Execute the action
                             if let Err(e) = executor_clone.execute(&intent.action) {
@@ -89,22 +114,43 @@ impl GestureApp {
                             }
                         } else {
                             warn!("⚠️  No matching action found");
+                            let _ = overlay_sender.send(OverlayCommand::Clear);
                         }
                     }
                     GestureRecognizerEvent::GestureCancelled => {
                         debug!("❌ Gesture cancelled");
+                        let _ = overlay_sender.send(OverlayCommand::Clear);
                     }
                     GestureRecognizerEvent::GestureStarted(context) => {
                         debug!(
                             "🎬 Gesture started at: ({}, {})",
                             context.start_point.x, context.start_point.y
                         );
+                        if settings_clone.show_trail {
+                            let color =
+                                crate::winapi::overlay::parse_hex_color(
+                                    &settings_clone.trail_color_middle,
+                                );
+                            let _ = overlay_sender.send(OverlayCommand::StartTrail {
+                                x: context.start_point.x,
+                                y: context.start_point.y,
+                                color,
+                                width: settings_clone.trail_width,
+                            });
+                        }
                     }
                     GestureRecognizerEvent::GestureRecognized(gesture, _is_final) => {
                         debug!("🔍 Gesture recognized: {}", gesture.short_display());
                     }
                     GestureRecognizerEvent::ModifierDetected(modifier) => {
                         debug!("🔧 Modifier detected: {:?}", modifier);
+                    }
+                    GestureRecognizerEvent::PositionUpdate(point) => {
+                        last_pos.set((point.x, point.y));
+                        if settings_clone.show_trail {
+                            let _ =
+                                overlay_sender.send(OverlayCommand::TrailPoint { x: point.x, y: point.y });
+                        }
                     }
                 }
             });
@@ -122,6 +168,7 @@ impl GestureApp {
             executor,
             hook: None, // Hook will be created in message loop thread
             enabled,
+            overlay,
         })
     }
 
@@ -205,6 +252,9 @@ impl GestureApp {
 impl Drop for GestureApp {
     fn drop(&mut self) {
         info!("GestureApp dropping - cleaning up resources");
+
+        // Shutdown overlay
+        self.overlay.send(OverlayCommand::Shutdown);
 
         // Uninstall the hook if it exists
         if let Some(mut hook) = self.hook.take() {

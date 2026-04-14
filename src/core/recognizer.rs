@@ -4,7 +4,7 @@
 //! high-level gesture recognition functionality.
 
 use crate::config::config::Settings;
-use crate::core::gesture::{Gesture, GestureDir, GestureModifier};
+use crate::core::gesture::{Gesture, GestureDir, GestureModifier, Point};
 use crate::core::parser::{calculate_4direction, calculate_8direction};
 use crate::core::tracker::{PathTracker, TrackerEvent, TrackerState};
 use crate::winapi::hook::MouseEvent;
@@ -53,6 +53,9 @@ impl GestureRecognizer {
                 TrackerEvent::ModifierDetected(modifier) => {
                     GestureRecognizerEvent::ModifierDetected(modifier)
                 }
+                TrackerEvent::PositionUpdate(point) => {
+                    GestureRecognizerEvent::PositionUpdate(point)
+                }
             };
             callback(recognizer_event);
         });
@@ -99,6 +102,7 @@ pub enum GestureRecognizerEvent {
     GestureCompleted(Gesture),
     GestureCancelled,
     ModifierDetected(GestureModifier),
+    PositionUpdate(Point),
 }
 
 /// Shared gesture recognizer that can be used across threads

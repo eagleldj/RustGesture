@@ -209,6 +209,27 @@ pub struct Settings {
 
     /// Disable gestures in fullscreen applications
     pub disable_in_fullscreen: bool,
+
+    /// Show gesture trail overlay
+    pub show_trail: bool,
+
+    /// Show gesture name tooltip after recognition
+    pub show_gesture_name: bool,
+
+    /// Trail line width in pixels
+    pub trail_width: u32,
+
+    /// Trail color for right-button gesture (hex, e.g. "#0096FF")
+    pub trail_color_right: String,
+
+    /// Trail color for middle-button gesture (hex, e.g. "#00CC66")
+    pub trail_color_middle: String,
+
+    /// Trail color for X-button gesture (hex, e.g. "#FF8800")
+    pub trail_color_x: String,
+
+    /// Trail color for unrecognized gesture (hex, e.g. "#6633CC")
+    pub trail_color_unknown: String,
 }
 
 impl Default for Settings {
@@ -219,6 +240,13 @@ impl Default for Settings {
             stay_timeout: 500,
             enable_8_direction: false,
             disable_in_fullscreen: true,
+            show_trail: true,
+            show_gesture_name: true,
+            trail_width: 3,
+            trail_color_right: "#0096FF".to_string(),
+            trail_color_middle: "#00CC66".to_string(),
+            trail_color_x: "#FF8800".to_string(),
+            trail_color_unknown: "#6633CC".to_string(),
         }
     }
 }
