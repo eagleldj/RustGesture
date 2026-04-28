@@ -165,7 +165,8 @@ impl PathTracker {
             if distance > threshold {
                 // Start tracking
                 self.state = TrackerState::Tracking;
-                let context = GestureContext::new(start);
+                let trigger = self.current_gesture.as_ref().map(|g| g.trigger_button).unwrap_or(GestureTriggerButton::Middle);
+                let context = GestureContext::new(start, trigger);
                 self.emit_event(TrackerEvent::GestureStarted(context));
                 debug!("Gesture started after {}px movement", distance);
             } else {

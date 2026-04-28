@@ -32,7 +32,22 @@
       "Bash(cmd //c \"start /B target\\\\debug\\\\rustgesture.exe\")",
       "Bash(cmd //c \"start /B target\\\\debug\\\\rustgesture.exe > nul 2>&1\" sleep 3 tasklist)",
       "Bash(cmd //c \"del \\\\\\\\.\\\\D:\\\\_src\\\\RustGesture\\\\nul\")",
-      "Bash(cmd //c \"dir D:\\\\_src\\\\RustGesture\\\\nul*\")"
+      "Bash(cmd //c \"dir D:\\\\_src\\\\RustGesture\\\\nul*\")",
+      "Bash(echo \"PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(RUST_LOG=info ./target/debug/rustgesture.exe)",
+      "Bash(echo \"Started PID: $!\")",
+      "Bash(start target/release/rustgesture.exe)",
+      "Bash(RUST_LOG=debug ./target/release/rustgesture.exe)",
+      "Bash(RUST_LOG=info ./target/release/rustgesture.exe)",
+      "Bash(taskkill //IM rustgesture.exe //F)",
+      "Bash(echo \"程序已启动 \\(PID=$!\\)，请用右键画一个手势，画完后按回车...\")",
+      "Bash(echo \"程序已启动 PID=$!, 请按住鼠标右键拖动画手势\")",
+      "Bash(rm -f /tmp/rustgesture_test4.log)",
+      "Bash(echo \"PID=$!\")",
+      "Bash(rm -f /tmp/rustgesture_test5.log)",
+      "Bash(echo \"PID=$! 已启动，请画右键手势\")",
+      "Bash(./target/release/rustgesture.exe)"
     ]
   }
 }

@@ -247,16 +247,20 @@ pub struct GestureContext {
 
     /// Is the application in fullscreen mode?
     pub is_fullscreen: bool,
+
+    /// Which button triggered this gesture
+    pub trigger_button: GestureTriggerButton,
 }
 
 impl GestureContext {
-    pub fn new(start_point: Point) -> Self {
+    pub fn new(start_point: Point, trigger_button: GestureTriggerButton) -> Self {
         Self {
             start_point,
             current_point: start_point,
             window_handle: None,
             process_id: None,
             is_fullscreen: false,
+            trigger_button,
         }
     }
 }

@@ -13,6 +13,50 @@ use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // DPI awareness: WH_MOUSE_LL always reports physical pixel coordinates.
+    // Use per-monitor DPI awareness (v2) so coordinates are consistent across
+    // multiple monitors with different DPI scaling.
+    unsafe {
+        use windows::core::PCSTR;
+        use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress};
+        use windows::Win32::Foundation::*;
+
+        // Try SetProcessDpiAwareness(2) from shcore.dll first (per-monitor DPI aware)
+        let shcore_name: Vec<u16> = "shcore\0".encode_utf16().collect();
+        let shcore = windows::Win32::System::LibraryLoader::GetModuleHandleW(
+            windows::core::PCWSTR::from_raw(shcore_name.as_ptr()),
+        )
+        .unwrap_or_default();
+
+        let mut dpi_awareness_set = false;
+        if !shcore.is_invalid() && shcore != HMODULE::default() {
+            let proc_name: Vec<u8> = b"SetProcessDpiAwareness\0".to_vec();
+            let proc_addr = GetProcAddress(shcore, PCSTR::from_raw(proc_name.as_ptr()));
+            if let Some(proc) = proc_addr {
+                let func: unsafe extern "system" fn(i32) -> i32 = std::mem::transmute(proc);
+                let result = func(2); // PROCESS_PER_MONITOR_DPI_AWARE
+                info!("SetProcessDpiAwareness(2) called, result={}", result);
+                if result >= 0 {
+                    dpi_awareness_set = true;
+                }
+            }
+        }
+
+        // Fallback to SetProcessDPIAware from user32.dll
+        if !dpi_awareness_set {
+            let user32 = GetModuleHandleW(windows::core::w!("user32")).unwrap_or_default();
+            if !user32.is_invalid() && user32 != HMODULE::default() {
+                let proc_name: Vec<u8> = b"SetProcessDPIAware\0".to_vec();
+                let proc_addr = GetProcAddress(user32, PCSTR::from_raw(proc_name.as_ptr()));
+                if let Some(proc) = proc_addr {
+                    let func: unsafe extern "system" fn() -> i32 = std::mem::transmute(proc);
+                    let result = func();
+                    info!("SetProcessDPIAware called (fallback), result={}", result);
+                }
+            }
+        }
+    }
+
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(

@@ -12,7 +12,6 @@ use crate::core::{
 };
 use crate::winapi::hook::MouseHook;
 use crate::winapi::overlay::{GestureOverlay, OverlayCommand};
-use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tracing::{debug, error, info, warn};
@@ -64,8 +63,6 @@ impl GestureApp {
         // Set event callback on recognizer
         {
             let mut recognizer = recognizer.lock().unwrap();
-            // Track last known mouse position for ShowName placement (captured by closure)
-            let last_pos = Cell::new((0i32, 0i32));
             recognizer.set_event_callback(move |event| {
                 match event {
                     GestureRecognizerEvent::GestureCompleted(gesture) => {
@@ -92,18 +89,18 @@ impl GestureApp {
                         if let Some(intent) = finder.find(&gesture, None) {
                             info!("🎯 {}", intent.action.display_info());
 
-                            // Show gesture name
+                            // Show gesture name at screen center-bottom
                             if settings_clone.show_gesture_name {
-                                let (lx, ly) = last_pos.get();
                                 let _ = overlay_sender.send(OverlayCommand::ShowName {
                                     name: if intent.name.is_empty() {
                                         intent.action.display_info()
                                     } else {
                                         intent.name.clone()
                                     },
-                                    x: lx,
-                                    y: ly,
                                 });
+                            } else {
+                                // No name to show, just fade out trail
+                                let _ = overlay_sender.send(OverlayCommand::FadeOut);
                             }
 
                             // Execute the action
@@ -114,39 +111,61 @@ impl GestureApp {
                             }
                         } else {
                             warn!("⚠️  No matching action found");
-                            let _ = overlay_sender.send(OverlayCommand::Clear);
+                            let _ = overlay_sender.send(OverlayCommand::FadeOut);
                         }
                     }
                     GestureRecognizerEvent::GestureCancelled => {
                         debug!("❌ Gesture cancelled");
-                        let _ = overlay_sender.send(OverlayCommand::Clear);
+                        let _ = overlay_sender.send(OverlayCommand::FadeOut);
                     }
                     GestureRecognizerEvent::GestureStarted(context) => {
-                        debug!(
-                            "🎬 Gesture started at: ({}, {})",
-                            context.start_point.x, context.start_point.y
+                        info!(
+                            "🎬 Gesture started at: ({}, {}), button: {:?}, show_trail={}",
+                            context.start_point.x, context.start_point.y, context.trigger_button,
+                            settings_clone.show_trail
                         );
                         if settings_clone.show_trail {
-                            let color =
-                                crate::winapi::overlay::parse_hex_color(
-                                    &settings_clone.trail_color_middle,
-                                );
+                            let color = match context.trigger_button {
+                                crate::core::gesture::GestureTriggerButton::Right => {
+                                    crate::winapi::overlay::parse_hex_color(&settings_clone.trail_color_right)
+                                }
+                                crate::core::gesture::GestureTriggerButton::Middle => {
+                                    crate::winapi::overlay::parse_hex_color(&settings_clone.trail_color_middle)
+                                }
+                                _ => {
+                                    crate::winapi::overlay::parse_hex_color(&settings_clone.trail_color_x)
+                                }
+                            };
                             let _ = overlay_sender.send(OverlayCommand::StartTrail {
                                 x: context.start_point.x,
                                 y: context.start_point.y,
                                 color,
                                 width: settings_clone.trail_width,
                             });
+                            info!("📤 Sent StartTrail to overlay: ({}, {}) color={:#x} width={}", context.start_point.x, context.start_point.y, color, settings_clone.trail_width);
                         }
                     }
                     GestureRecognizerEvent::GestureRecognized(gesture, _is_final) => {
                         debug!("🔍 Gesture recognized: {}", gesture.short_display());
+                        // 绘制过程中尝试匹配手势
+                        if settings_clone.show_gesture_name && gesture.len() > 0 {
+                            let finder = intent_finder_clone.lock().unwrap();
+                            if let Some(intent) = finder.find(&gesture, None) {
+                                let name = if intent.name.is_empty() {
+                                    intent.action.display_info()
+                                } else {
+                                    intent.name.clone()
+                                };
+                                let _ = overlay_sender.send(OverlayCommand::ShowName { name });
+                            } else {
+                                let _ = overlay_sender.send(OverlayCommand::HideName);
+                            }
+                        }
                     }
                     GestureRecognizerEvent::ModifierDetected(modifier) => {
                         debug!("🔧 Modifier detected: {:?}", modifier);
                     }
                     GestureRecognizerEvent::PositionUpdate(point) => {
-                        last_pos.set((point.x, point.y));
                         if settings_clone.show_trail {
                             let _ =
                                 overlay_sender.send(OverlayCommand::TrailPoint { x: point.x, y: point.y });
