@@ -47,7 +47,10 @@
       "Bash(echo \"PID=$!\")",
       "Bash(rm -f /tmp/rustgesture_test5.log)",
       "Bash(echo \"PID=$! 已启动，请画右键手势\")",
-      "Bash(./target/release/rustgesture.exe)"
+      "Bash(./target/release/rustgesture.exe)",
+      "Bash(echo \"Started, PID=$!\")",
+      "Bash(taskkill //F //IM rustgesture.exe)",
+      "Bash(start ./target/release/rustgesture.exe)"
     ]
   }
 }

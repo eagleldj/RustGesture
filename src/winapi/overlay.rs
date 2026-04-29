@@ -8,7 +8,7 @@ use tracing::{debug, error, info, warn};
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
-use windows::core::PCWSTR;
+use windows::core::{PCSTR, PCWSTR};
 
 // ---------------------------------------------------------------------------
 // 公共类型
@@ -41,6 +41,8 @@ struct OverlayState {
     fade_alpha: u8,
     /// 淡出前的等待计数（每次 timer tick 减 1，到 0 才开始减 alpha）
     fade_wait: u8,
+    /// 是否期望收到 WM_TIMER（防止 KillTimer 后残留消息被误处理）
+    fading: bool,
     /// 窗口偏移（虚拟屏幕原点，用于坐标转换）
     origin_x: i32,
     origin_y: i32,
@@ -58,6 +60,7 @@ impl Default for OverlayState {
             name: None,
             fade_alpha: 0,
             fade_wait: 0,
+            fading: false,
             origin_x: 0,
             origin_y: 0,
             screen_w: 0,
@@ -129,6 +132,37 @@ unsafe fn screen_to_client(hwnd: HWND, x: i32, y: i32) -> (i32, i32) {
     let mut pt = POINT { x, y };
     let _ = ScreenToClient(hwnd, &mut pt);
     (pt.x, pt.y)
+}
+
+/// 获取光标位置并转换为窗口客户区坐标。
+/// 核心问题：Per-Monitor DPI V1 下，GetWindowRect 返回统一坐标空间，
+/// 而 GetClientRect 返回窗口实际位图的像素空间（可能被 DPI 缩放）。
+/// 必须用 client_rect / window_rect 的比值来缩放坐标。
+/// 返回 (client_x, client_y, screen_x, screen_y, scale_x, scale_y, client_w, client_h)
+unsafe fn cursor_to_client(hwnd: HWND) -> (i32, i32, i32, i32, f64, f64, i32, i32) {
+    let mut pt = POINT::default();
+    let _ = GetCursorPos(&mut pt);
+    let screen_x = pt.x;
+    let screen_y = pt.y;
+
+    let mut wr = RECT::default();
+    let _ = GetWindowRect(hwnd, &mut wr);
+
+    let mut cr = RECT::default();
+    let _ = GetClientRect(hwnd, &mut cr);
+
+    let win_w = (wr.right - wr.left) as f64;
+    let win_h = (wr.bottom - wr.top) as f64;
+    let cli_w = (cr.right - cr.left) as f64;
+    let cli_h = (cr.bottom - cr.top) as f64;
+
+    let scale_x = if win_w > 0.0 { cli_w / win_w } else { 1.0 };
+    let scale_y = if win_h > 0.0 { cli_h / win_h } else { 1.0 };
+
+    let client_x = ((screen_x - wr.left) as f64 * scale_x) as i32;
+    let client_y = ((screen_y - wr.top) as f64 * scale_y) as i32;
+
+    (client_x, client_y, screen_x, screen_y, scale_x, scale_y, cr.right, cr.bottom)
 }
 
 // ---------------------------------------------------------------------------
@@ -206,8 +240,8 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
         // 显示窗口并设为置顶
         let _ = ShowWindow(hwnd, SW_SHOW);
         let _ = SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        // 初始状态：完全透明
-        let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), 0, OVERLAY_LAYERED_FLAGS);
+        // 初始状态：alpha=255，但全黑窗口在 COLORKEY 下不可见
+        let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), 255, OVERLAY_LAYERED_FLAGS);
 
         info!(
             "Overlay window created: {:?} at ({},{}) size {}x{}",
@@ -234,6 +268,10 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                     break;
                 }
                 if msg.message == WM_TIMER {
+                    // 忽略残留的 WM_TIMER（KillTimer 不清除队列中已有消息）
+                    if !state.fading {
+                        continue;
+                    }
                     if state.fade_alpha > 0 {
                         // 先短暂等待再快速淡出
                         if state.fade_wait > 0 {
@@ -247,8 +285,11 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                             let _ = KillTimer(hwnd, 1);
                             state.points.clear();
                             state.name = None;
-                            // 完全透明
-                            let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), 0, OVERLAY_LAYERED_FLAGS);
+                            state.fade_wait = 0;
+                            state.fading = false;
+                            // 全黑填充在 COLORKEY 下透明，保持 alpha=255 避免合成器丢弃窗口
+                            state.fade_alpha = 255;
+                            paint(hwnd, &state);
                         } else {
                             let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), state.fade_alpha, OVERLAY_LAYERED_FLAGS);
                             paint(hwnd, &state);
@@ -267,41 +308,28 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
             while let Ok(cmd) = rx.try_recv() {
                 match cmd {
                     OverlayCommand::StartTrail { x: _, y: _, color, width } => {
-                        // 获取当前光标位置
-                        let mut pt = POINT::default();
-                        let _ = GetCursorPos(&mut pt);
-                        // 获取光标所在显示器的物理矩形
-                        let hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
-                        let mut mi = MONITORINFO::default();
-                        mi.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
-                        let _ = GetMonitorInfoW(hmon, &mut mi);
-                        let mr = mi.rcMonitor;
-                        // 将窗口定位到该显示器（避免跨 DPI 区域）
-                        let mw = mr.right - mr.left;
-                        let mh = mr.bottom - mr.top;
-                        let _ = MoveWindow(hwnd, mr.left, mr.top, mw, mh, false);
-                        state.screen_w = mw;
-                        state.screen_h = mh;
-                        // 坐标转换
-                        let _ = ScreenToClient(hwnd, &mut pt);
+                        let (cx, cy, sx, sy, scale_x, scale_y, cli_w, cli_h) = cursor_to_client(hwnd);
+                        info!(
+                            "StartTrail: cursor=({},{}) client=({},{}) scale=({:.2},{:.2}) win_rect_size=({},{}) client_rect_size=({},{})",
+                            sx, sy, cx, cy, scale_x, scale_y,
+                            6320, 1740, cli_w, cli_h
+                        );
                         state.points.clear();
                         state.name = None;
                         state.fade_alpha = 255;
                         state.fade_wait = 0;
+                        state.fading = false;
                         state.color = color;
                         state.width = width;
-                        state.points.push((pt.x, pt.y));
+                        state.points.push((cx, cy));
                         let _ = KillTimer(hwnd, 1);
                         let _ = SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                         paint(hwnd, &state);
                     }
                     OverlayCommand::TrailPoint { x: _, y: _ } => {
-                        // 忽略 hook 坐标，使用 GetCursorPos 避免坐标空间不一致
-                        let mut pt = POINT::default();
-                        let _ = GetCursorPos(&mut pt);
-                        let _ = ScreenToClient(hwnd, &mut pt);
-                        if state.points.last() != Some(&(pt.x, pt.y)) {
-                            state.points.push((pt.x, pt.y));
+                        let (cx, cy, _, _, _, _, _, _) = cursor_to_client(hwnd);
+                        if state.points.last() != Some(&(cx, cy)) {
+                            state.points.push((cx, cy));
                         }
                         paint(hwnd, &state);
                     }
@@ -321,6 +349,7 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                         if state.fade_alpha > 0 {
                             let _ = KillTimer(hwnd, 1);
                             state.fade_wait = 2; // 短暂保持后快速淡出
+                            state.fading = true;
                             SetTimer(hwnd, 1, 30, None);
                         }
                     }
@@ -328,9 +357,10 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                         let _ = KillTimer(hwnd, 1);
                         state.points.clear();
                         state.name = None;
-                        state.fade_alpha = 0;
+                        state.fade_alpha = 255;
                         state.fade_wait = 0;
-                        let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), 0, OVERLAY_LAYERED_FLAGS);
+                        state.fading = false;
+                        paint(hwnd, &state);
                     }
                     OverlayCommand::Shutdown => {
                         let _ = KillTimer(hwnd, 1);
