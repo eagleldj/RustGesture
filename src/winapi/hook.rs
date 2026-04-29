@@ -231,9 +231,9 @@ impl MouseHook {
             let event = Self::convert_mouse_event(msg, &hook_struct);
 
             // Diagnostic: log button events at hook level
-            if msg != WM_MOUSEMOVE {
-                tracing::info!("🪝 hook_proc: msg={} at ({}, {})", msg, hook_struct.pt.x, hook_struct.pt.y);
-            }
+            // if msg != WM_MOUSEMOVE {
+            //     tracing::info!("🪝 hook_proc: msg={} at ({}, {})", msg, hook_struct.pt.x, hook_struct.pt.y);
+            // }
 
             if let Ok(global_callback) = MOUSE_HOOK_CALLBACK.try_lock() {
                 if let Some(ref callback) = *global_callback {

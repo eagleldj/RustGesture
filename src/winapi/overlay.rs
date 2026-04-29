@@ -8,7 +8,7 @@ use tracing::{debug, error, info, warn};
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
-use windows::core::{PCSTR, PCWSTR};
+use windows::core::PCWSTR;
 
 // ---------------------------------------------------------------------------
 // 公共类型
@@ -127,43 +127,6 @@ const OVERLAY_CLASS_NAME: &str = "RustGestureOverlay\0";
 /// 组合标志：COLORKEY 让黑色透明，ALPHA 控制整体不透明度
 const OVERLAY_LAYERED_FLAGS: LAYERED_WINDOW_ATTRIBUTES_FLAGS = LAYERED_WINDOW_ATTRIBUTES_FLAGS(LWA_COLORKEY.0 | LWA_ALPHA.0);
 
-/// 将屏幕坐标转换为窗口客户区坐标（自动处理 DPI 缩放）
-unsafe fn screen_to_client(hwnd: HWND, x: i32, y: i32) -> (i32, i32) {
-    let mut pt = POINT { x, y };
-    let _ = ScreenToClient(hwnd, &mut pt);
-    (pt.x, pt.y)
-}
-
-/// 获取光标位置并转换为窗口客户区坐标。
-/// 核心问题：Per-Monitor DPI V1 下，GetWindowRect 返回统一坐标空间，
-/// 而 GetClientRect 返回窗口实际位图的像素空间（可能被 DPI 缩放）。
-/// 必须用 client_rect / window_rect 的比值来缩放坐标。
-/// 返回 (client_x, client_y, screen_x, screen_y, scale_x, scale_y, client_w, client_h)
-unsafe fn cursor_to_client(hwnd: HWND) -> (i32, i32, i32, i32, f64, f64, i32, i32) {
-    let mut pt = POINT::default();
-    let _ = GetCursorPos(&mut pt);
-    let screen_x = pt.x;
-    let screen_y = pt.y;
-
-    let mut wr = RECT::default();
-    let _ = GetWindowRect(hwnd, &mut wr);
-
-    let mut cr = RECT::default();
-    let _ = GetClientRect(hwnd, &mut cr);
-
-    let win_w = (wr.right - wr.left) as f64;
-    let win_h = (wr.bottom - wr.top) as f64;
-    let cli_w = (cr.right - cr.left) as f64;
-    let cli_h = (cr.bottom - cr.top) as f64;
-
-    let scale_x = if win_w > 0.0 { cli_w / win_w } else { 1.0 };
-    let scale_y = if win_h > 0.0 { cli_h / win_h } else { 1.0 };
-
-    let client_x = ((screen_x - wr.left) as f64 * scale_x) as i32;
-    let client_y = ((screen_y - wr.top) as f64 * scale_y) as i32;
-
-    (client_x, client_y, screen_x, screen_y, scale_x, scale_y, cr.right, cr.bottom)
-}
 
 // ---------------------------------------------------------------------------
 // Overlay 线程主函数
@@ -308,12 +271,23 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
             while let Ok(cmd) = rx.try_recv() {
                 match cmd {
                     OverlayCommand::StartTrail { x: _, y: _, color, width } => {
-                        let (cx, cy, sx, sy, scale_x, scale_y, cli_w, cli_h) = cursor_to_client(hwnd);
-                        info!(
-                            "StartTrail: cursor=({},{}) client=({},{}) scale=({:.2},{:.2}) win_rect_size=({},{}) client_rect_size=({},{})",
-                            sx, sy, cx, cy, scale_x, scale_y,
-                            6320, 1740, cli_w, cli_h
-                        );
+                        let mut pt = POINT::default();
+                        let _ = GetCursorPos(&mut pt);
+                        // 将窗口移到光标所在的显示器上，确保窗口和光标在同一 DPI 空间
+                        let hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+                        let mut mi = MONITORINFO::default();
+                        mi.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+                        let _ = GetMonitorInfoW(hmon, &mut mi);
+                        let mr = mi.rcMonitor;
+                        let mw = mr.right - mr.left;
+                        let mh = mr.bottom - mr.top;
+                        let _ = MoveWindow(hwnd, mr.left, mr.top, mw, mh, false);
+                        state.origin_x = mr.left;
+                        state.origin_y = mr.top;
+                        state.screen_w = mw;
+                        state.screen_h = mh;
+                        // 窗口已在同一显示器，ScreenToClient 正确工作
+                        let _ = ScreenToClient(hwnd, &mut pt);
                         state.points.clear();
                         state.name = None;
                         state.fade_alpha = 255;
@@ -321,15 +295,17 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                         state.fading = false;
                         state.color = color;
                         state.width = width;
-                        state.points.push((cx, cy));
+                        state.points.push((pt.x, pt.y));
                         let _ = KillTimer(hwnd, 1);
                         let _ = SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                         paint(hwnd, &state);
                     }
                     OverlayCommand::TrailPoint { x: _, y: _ } => {
-                        let (cx, cy, _, _, _, _, _, _) = cursor_to_client(hwnd);
-                        if state.points.last() != Some(&(cx, cy)) {
-                            state.points.push((cx, cy));
+                        let mut pt = POINT::default();
+                        let _ = GetCursorPos(&mut pt);
+                        let _ = ScreenToClient(hwnd, &mut pt);
+                        if state.points.last() != Some(&(pt.x, pt.y)) {
+                            state.points.push((pt.x, pt.y));
                         }
                         paint(hwnd, &state);
                     }

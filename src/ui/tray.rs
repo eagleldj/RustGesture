@@ -261,7 +261,7 @@ impl TrayIcon {
             TRAY_ICON_MESSAGE => {
                 // Tray icon message
                 let event = lparam.0 as u32;
-                info!("📨 Tray icon message received: event={}", event);
+                // info!("📨 Tray icon message received: event={}", event);
                 match event {
                     WM_LBUTTONDBLCLK => {
                         info!("Tray icon double-clicked - opening config dialog");
@@ -305,7 +305,7 @@ impl TrayIcon {
                         }
                     }
                     _ => {
-                        info!("🔔 Unknown tray icon event: {}", event);
+                        // info!("🔔 Unknown tray icon event: {}", event);
                     }
                 }
                 LRESULT(0)
