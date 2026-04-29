@@ -98,9 +98,6 @@ impl GestureApp {
                                         intent.name.clone()
                                     },
                                 });
-                            } else {
-                                // No name to show, just fade out trail
-                                let _ = overlay_sender.send(OverlayCommand::FadeOut);
                             }
 
                             // Execute the action
@@ -109,6 +106,9 @@ impl GestureApp {
                             } else {
                                 info!("✓ Action executed successfully");
                             }
+
+                            // Clear overlay after action execution
+                            let _ = overlay_sender.send(OverlayCommand::FadeOut);
                         } else {
                             warn!("⚠️  No matching action found");
                             let _ = overlay_sender.send(OverlayCommand::FadeOut);

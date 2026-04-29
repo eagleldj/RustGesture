@@ -315,6 +315,7 @@ fn overlay_thread_main(rx: Receiver<OverlayCommand>) {
                         state.name = Some((name, cx, cy));
                         state.fade_alpha = 255;
                         let _ = KillTimer(hwnd, 1);
+                        state.fading = false;
                         paint(hwnd, &state);
                     }
                     OverlayCommand::HideName => {
@@ -414,11 +415,26 @@ unsafe fn paint(hwnd: HWND, state: &OverlayState) {
 
 /// 绘制手势名称标签（圆角矩形背景 + 白色文字）
 unsafe fn draw_name_label(dc: HDC, name: &str, x: i32, y: i32) {
-    let text_y = y - 20;
+    // 创建较大的字体（24px）
+    let font = CreateFontW(
+        -24, 0, 0, 0, 400, // FW_NORMAL
+        0, 0, 0, // italic, underline, strikeout
+        1,   // DEFAULT_CHARSET
+        0,   // OUT_DEFAULT_PRECIS
+        0,   // CLIP_DEFAULT_PRECIS
+        5,   // CLEARTYPE_QUALITY
+        0,   // DEFAULT_PITCH | FF_DONTCARE
+        PCWSTR::null(),
+    );
+    let old_font = SelectObject(dc, font);
+
+    let text_y = y - 24;
 
     let mut text_wide: Vec<u16> = name.encode_utf16().collect();
     text_wide.push(0);
     if text_wide.len() <= 1 {
+        SelectObject(dc, old_font);
+        DeleteObject(font);
         return;
     }
 
@@ -428,7 +444,7 @@ unsafe fn draw_name_label(dc: HDC, name: &str, x: i32, y: i32) {
     let text_w = text_rect.right - text_rect.left;
     let text_h = text_rect.bottom - text_rect.top;
 
-    let pad = 8;
+    let pad = 12;
     let bg_left = x - text_w / 2 - pad;
     let bg_top = text_y - text_h / 2 - pad;
     let bg_right = x + text_w / 2 + pad;
@@ -452,6 +468,9 @@ unsafe fn draw_name_label(dc: HDC, name: &str, x: i32, y: i32) {
         bottom: text_y + text_h / 2,
     };
     DrawTextW(dc, &mut text_wide, &mut draw_rect as *mut _, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(dc, old_font);
+    DeleteObject(font);
 }
 
 /// 默认窗口过程
