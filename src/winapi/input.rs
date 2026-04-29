@@ -152,6 +152,18 @@ impl InputSimulator {
             "VK_F10" | "F10" => Ok(VIRTUAL_KEY(0x79)),
             "VK_F11" | "F11" => Ok(VIRTUAL_KEY(0x7A)),
             "VK_F12" | "F12" => Ok(VIRTUAL_KEY(0x7B)),
+            // Arrow keys
+            "VK_LEFT" | "LEFT" => Ok(VIRTUAL_KEY(0x25)),
+            "VK_UP" | "UP" => Ok(VIRTUAL_KEY(0x26)),
+            "VK_RIGHT" | "RIGHT" => Ok(VIRTUAL_KEY(0x27)),
+            "VK_DOWN" | "DOWN" => Ok(VIRTUAL_KEY(0x28)),
+            // Navigation keys
+            "VK_HOME" | "HOME" => Ok(VIRTUAL_KEY(0x24)),
+            "VK_END" | "END" => Ok(VIRTUAL_KEY(0x23)),
+            "VK_PRIOR" | "PAGEUP" => Ok(VIRTUAL_KEY(0x21)),
+            "VK_NEXT" | "PAGEDOWN" => Ok(VIRTUAL_KEY(0x22)),
+            "VK_INSERT" | "INSERT" => Ok(VIRTUAL_KEY(0x2D)),
+            "VK_DELETE" | "DELETE" => Ok(VIRTUAL_KEY(0x2E)),
             // Add more key mappings as needed
             _ => {
                 // Try to parse as virtual key code
