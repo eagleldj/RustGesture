@@ -3,15 +3,12 @@
 //! This module handles low-level mouse and keyboard hooks using Windows API.
 
 use windows::Win32::Foundation::*;
-use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::core::PCWSTR;
-use std::sync::Arc;
 use std::sync::Mutex;
 use tracing::info;
 
-use crate::core::gesture::{GestureTriggerButton, Point};
 use anyhow::{Result, anyhow};
 
 // Global callback for mouse hook
@@ -27,6 +24,7 @@ static LAST_HOOK_DURATION_NS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 // Get performance stats
+#[allow(dead_code)]
 pub fn get_hook_stats() -> (u64, u64) {
     let count = HOOK_CALL_COUNT.load(std::sync::atomic::Ordering::Relaxed);
     let duration_ns = LAST_HOOK_DURATION_NS.load(std::sync::atomic::Ordering::Relaxed);
@@ -43,6 +41,7 @@ static MOUSE_MOVE_COUNTER: std::sync::atomic::AtomicUsize =
     std::sync::atomic::AtomicUsize::new(0);
 
 /// Mouse event types
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum MouseEvent {
     MouseMove(i32, i32),
@@ -60,6 +59,7 @@ pub enum MouseEvent {
 
 impl MouseEvent {
     /// Get the position of the mouse event
+    #[allow(dead_code)]
     pub fn position(&self) -> (i32, i32) {
         match self {
             MouseEvent::MouseMove(x, y) => (*x, *y),

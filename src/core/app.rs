@@ -2,8 +2,7 @@
 //!
 //! This module provides a high-level application that integrates all components.
 
-use crate::config::{config::GestureConfig, manager::ConfigManager};
-use crate::core::hook_callback::GestureHookCallback;
+use crate::config::manager::ConfigManager;
 use crate::core::{
     executor::CommandExecutor,
     gesture::Gesture,
@@ -12,7 +11,7 @@ use crate::core::{
 };
 use crate::winapi::hook::MouseHook;
 use crate::winapi::overlay::{GestureOverlay, OverlayCommand};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use tracing::{debug, error, info, warn};
 
@@ -20,6 +19,7 @@ use tracing::{debug, error, info, warn};
 unsafe impl Send for GestureApp {}
 
 /// Gesture application
+#[allow(dead_code)]
 pub struct GestureApp {
     config_manager: Mutex<ConfigManager>,
     pub recognizer: SharedRecognizer,
@@ -30,6 +30,7 @@ pub struct GestureApp {
     overlay: GestureOverlay,
 }
 
+#[allow(dead_code)]
 impl GestureApp {
     /// Create a new gesture application
     pub fn new() -> anyhow::Result<Self> {
@@ -43,7 +44,7 @@ impl GestureApp {
         let enabled = Arc::new(AtomicBool::new(true));
 
         // Create intent finder
-        let intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
+        let _intent_finder = Mutex::new(GestureIntentFinder::new(config.clone()));
 
         // Create recognizer
         let recognizer = create_shared_recognizer(config.settings.clone());

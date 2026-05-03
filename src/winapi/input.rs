@@ -261,15 +261,15 @@ impl InputSimulator {
 
             match action.command {
                 WindowCommand::Minimize => {
-                    ShowWindow(hwnd, SW_SHOWMINIMIZED);
+                    let _ = ShowWindow(hwnd, SW_SHOWMINIMIZED);
                     debug!("Window minimized");
                 }
                 WindowCommand::Maximize => {
-                    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+                    let _ = ShowWindow(hwnd, SW_SHOWMAXIMIZED);
                     debug!("Window maximized");
                 }
                 WindowCommand::Restore => {
-                    ShowWindow(hwnd, SW_RESTORE);
+                    let _ = ShowWindow(hwnd, SW_RESTORE);
                     debug!("Window restored");
                 }
                 WindowCommand::Close => {

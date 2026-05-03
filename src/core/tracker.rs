@@ -4,11 +4,11 @@
 
 use crate::config::config::Settings;
 use crate::core::gesture::{
-    Gesture, GestureContext, GestureDir, GestureModifier, GestureTriggerButton, Point,
+    Gesture, GestureContext, GestureModifier, GestureTriggerButton, Point,
 };
 use crate::winapi::hook::MouseEvent;
 use std::time::{Duration, Instant};
-use tracing::{debug, info, trace};
+use tracing::{debug, info};
 
 /// Path tracker state
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -249,6 +249,7 @@ impl PathTracker {
     }
 
     /// Check for timeout
+    #[allow(dead_code)]
     pub fn check_timeout(&mut self) -> bool {
         if self.state == TrackerState::Tracking {
             if let Some(last_time) = self.last_move_time {
@@ -285,11 +286,13 @@ impl PathTracker {
     }
 
     /// Get the current state
+    #[allow(dead_code)]
     pub fn state(&self) -> &TrackerState {
         &self.state
     }
 
     /// Get the current gesture
+    #[allow(dead_code)]
     pub fn current_gesture(&self) -> Option<&Gesture> {
         self.current_gesture.as_ref()
     }

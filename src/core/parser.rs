@@ -3,7 +3,6 @@
 //! This module handles parsing mouse movements into gesture directions.
 
 use crate::core::gesture::{GestureDir, Point};
-use std::f32::consts::PI;
 
 /// Calculate 4-direction gesture from a vector
 pub fn calculate_4direction(vector: &Point) -> GestureDir {
@@ -83,6 +82,7 @@ pub fn calculate_8direction(vector: &Point) -> GestureDir {
 }
 
 /// Calculate the angle between two vectors in degrees
+#[allow(dead_code)]
 fn get_angle(vector_a: &Point, vector_b: &Point) -> f32 {
     let ax = vector_a.x as f32;
     let ay = vector_a.y as f32;

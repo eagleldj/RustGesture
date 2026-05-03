@@ -51,7 +51,8 @@
       "Bash(echo \"Started, PID=$!\")",
       "Bash(taskkill //F //IM rustgesture.exe)",
       "Bash(start ./target/release/rustgesture.exe)",
-      "Bash(cargo rustc *)"
+      "Bash(cargo rustc *)",
+      "Bash(cargo fix *)"
     ]
   }
 }

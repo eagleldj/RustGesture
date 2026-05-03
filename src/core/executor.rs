@@ -44,6 +44,7 @@ impl CommandExecutor {
     }
 
     /// Execute an action by name (for testing)
+    #[allow(dead_code)]
     pub fn execute_by_name(&self, name: &str) -> Result<()> {
         info!("Executing action: {}", name);
         // This is a placeholder for testing

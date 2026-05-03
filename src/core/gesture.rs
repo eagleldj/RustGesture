@@ -57,6 +57,7 @@ impl GestureDir {
     }
 
     /// Check if this is a diagonal direction
+    #[allow(dead_code)]
     pub fn is_diagonal(&self) -> bool {
         matches!(
             self,
@@ -65,6 +66,7 @@ impl GestureDir {
     }
 
     /// Convert to 4-direction equivalent
+    #[allow(dead_code)]
     pub fn to_cardinal(&self) -> GestureDir {
         match self {
             GestureDir::UpLeft | GestureDir::UpRight => GestureDir::Up,
@@ -102,6 +104,7 @@ pub enum GestureModifier {
 
 impl GestureModifier {
     /// Check if this modifier is a scroll wheel modifier
+    #[allow(dead_code)]
     pub fn is_scroll(&self) -> bool {
         matches!(self, GestureModifier::WheelForward | GestureModifier::WheelBackward)
     }
@@ -146,6 +149,7 @@ impl Gesture {
     }
 
     /// Check if gesture is empty
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.directions.is_empty()
     }
@@ -156,6 +160,7 @@ impl Gesture {
     }
 
     /// Get the last direction
+    #[allow(dead_code)]
     pub fn last(&self) -> Option<&GestureDir> {
         self.directions.last()
     }
@@ -231,6 +236,7 @@ impl Point {
 }
 
 /// Gesture context information
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct GestureContext {
     /// Starting point of the gesture

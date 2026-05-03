@@ -21,6 +21,7 @@ slint::include_modules!();
 
 // ---------- Persistent UI thread infrastructure ----------
 
+#[allow(dead_code)]
 enum UiCommand {
     ShowSettings { config_path: PathBuf },
     Shutdown,
@@ -266,6 +267,7 @@ fn action_to_detail(action: &Action) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn type_index_to_display(index: i32) -> &'static str {
     match index {
         0 => "键盘快捷键",

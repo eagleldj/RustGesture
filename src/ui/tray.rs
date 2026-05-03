@@ -195,24 +195,24 @@ impl TrayIcon {
 
         // Get current cursor position
         let mut point = POINT { x: 0, y: 0 };
-        GetCursorPos(&mut point);
+        let _ = GetCursorPos(&mut point);
 
         // Create context menu
         let hmenu = CreatePopupMenu().unwrap();
 
         let enabled = (*self.enabled_ptr).load(Ordering::SeqCst);
 
-        AppendMenuW(hmenu, MF_STRING, 1, PCWSTR(w!("Enable Gesture Recognition").as_ptr()));
-        AppendMenuW(hmenu, MF_STRING, 3, PCWSTR(w!("Settings...").as_ptr()));
-        AppendMenuW(hmenu, MF_SEPARATOR, 0, PCWSTR::null());
-        AppendMenuW(hmenu, MF_STRING, 2, PCWSTR(w!("Exit").as_ptr()));
+        let _ = AppendMenuW(hmenu, MF_STRING, 1, PCWSTR(w!("Enable Gesture Recognition").as_ptr()));
+        let _ = AppendMenuW(hmenu, MF_STRING, 3, PCWSTR(w!("Settings...").as_ptr()));
+        let _ = AppendMenuW(hmenu, MF_SEPARATOR, 0, PCWSTR::null());
+        let _ = AppendMenuW(hmenu, MF_STRING, 2, PCWSTR(w!("Exit").as_ptr()));
 
         // Check/Uncheck the Enable item
         CheckMenuItem(hmenu, 1, if enabled { MF_CHECKED.0 } else { MF_UNCHECKED.0 });
 
         // Enable/disable items based on state
-        EnableMenuItem(hmenu, 1, MF_ENABLED);
-        EnableMenuItem(hmenu, 2, MF_ENABLED);
+        let _ = EnableMenuItem(hmenu, 1, MF_ENABLED);
+        let _ = EnableMenuItem(hmenu, 2, MF_ENABLED);
 
         // Track popup menu
         let result = TrackPopupMenu(
@@ -225,7 +225,7 @@ impl TrayIcon {
             None
         );
 
-        DestroyMenu(hmenu);
+        let _ = DestroyMenu(hmenu);
 
         if result.0 == 1 {
             // Enable/Disable
@@ -352,7 +352,7 @@ impl Drop for TrayIcon {
 
                 // Destroy window
                 if !self.hwnd.is_invalid() {
-                    DestroyWindow(self.hwnd);
+                    let _ = DestroyWindow(self.hwnd);
                 }
             }
         }

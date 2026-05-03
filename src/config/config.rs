@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// Gesture direction (4-direction or 8-direction)
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GestureDir {
     Up,
@@ -19,6 +20,7 @@ pub enum GestureDir {
     DownRight,
 }
 
+#[allow(dead_code)]
 impl GestureDir {
     /// Convert to display name
     pub fn as_str(&self) -> &'static str {
@@ -36,6 +38,7 @@ impl GestureDir {
 }
 
 /// Gesture modifier keys
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum GestureModifier {
@@ -49,12 +52,14 @@ pub enum GestureModifier {
 }
 
 /// A gesture consisting of a sequence of directions and optional modifiers
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Gesture {
     pub directions: Vec<GestureDir>,
     pub modifiers: Vec<GestureModifier>,
 }
 
+#[allow(dead_code)]
 impl Gesture {
     /// Create a new gesture from directions
     pub fn new(directions: Vec<GestureDir>) -> Self {

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use tracing::{debug, info};
 
 /// Gesture intent represents a matched gesture with its action
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct GestureIntent {
     pub gesture: Gesture,
@@ -15,6 +16,7 @@ pub struct GestureIntent {
     pub name: String,
 }
 
+#[allow(dead_code)]
 impl GestureIntent {
     /// Check if this intent can be executed during the gesture (e.g., scroll wheel)
     pub fn can_execute_on_modifier(&self) -> bool {
@@ -23,6 +25,7 @@ impl GestureIntent {
 }
 
 /// Gesture intent finder
+#[allow(dead_code)]
 pub struct GestureIntentFinder {
     config: GestureConfig,
     // Cache gesture strings for faster lookup
@@ -31,6 +34,7 @@ pub struct GestureIntentFinder {
     app_caches: HashMap<String, HashMap<String, GestureEntry>>,
 }
 
+#[allow(dead_code)]
 impl GestureIntentFinder {
     /// Create a new gesture intent finder
     pub fn new(config: GestureConfig) -> Self {

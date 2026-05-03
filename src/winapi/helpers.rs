@@ -2,6 +2,8 @@
 //!
 //! This module provides safe wrappers and helper functions for common Windows API operations.
 
+#![allow(dead_code)]
+
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;

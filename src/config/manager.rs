@@ -6,18 +6,20 @@ use super::config::GestureConfig;
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 
 const CONFIG_FILENAME: &str = "config.json";
 const BACKUP_FILENAME: &str = "config.json.backup";
 
 /// Configuration manager
+#[allow(dead_code)]
 pub struct ConfigManager {
     config_path: PathBuf,
     backup_path: PathBuf,
     config: GestureConfig,
 }
 
+#[allow(dead_code)]
 impl ConfigManager {
     /// Create a new configuration manager
     pub fn new(config_dir: Option<PathBuf>) -> Result<Self> {

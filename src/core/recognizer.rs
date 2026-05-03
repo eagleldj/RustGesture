@@ -4,19 +4,19 @@
 //! high-level gesture recognition functionality.
 
 use crate::config::config::Settings;
-use crate::core::gesture::{Gesture, GestureDir, GestureModifier, Point};
-use crate::core::parser::{calculate_4direction, calculate_8direction};
+use crate::core::gesture::{Gesture, GestureModifier, Point};
 use crate::core::tracker::{PathTracker, TrackerEvent, TrackerState};
 use crate::winapi::hook::MouseEvent;
 use std::sync::{Arc, Mutex};
-use tracing::{debug, info, warn};
 
 /// Gesture recognizer that combines tracking and parsing
+#[allow(dead_code)]
 pub struct GestureRecognizer {
     tracker: PathTracker,
     max_gesture_steps: usize,
 }
 
+#[allow(dead_code)]
 impl GestureRecognizer {
     /// Create a new gesture recognizer
     pub fn new(settings: Settings) -> Self {

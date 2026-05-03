@@ -4,7 +4,7 @@
 //! 在独立线程中创建一个透明分层窗口，使用 SetLayeredWindowAttributes + GDI 绘制轨迹和手势名称。
 
 use std::sync::mpsc::{self, Receiver, Sender};
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -15,6 +15,7 @@ use windows::core::PCWSTR;
 // ---------------------------------------------------------------------------
 
 /// 发送给覆盖层线程的绘制命令
+#[allow(dead_code)]
 pub enum OverlayCommand {
     /// 开始新轨迹（重置状态，设置颜色和线宽）
     StartTrail { x: i32, y: i32, color: u32, width: u32 },
@@ -434,7 +435,7 @@ unsafe fn draw_name_label(dc: HDC, name: &str, x: i32, y: i32) {
     text_wide.push(0);
     if text_wide.len() <= 1 {
         SelectObject(dc, old_font);
-        DeleteObject(font);
+        let _ = DeleteObject(font);
         return;
     }
 
@@ -470,7 +471,7 @@ unsafe fn draw_name_label(dc: HDC, name: &str, x: i32, y: i32) {
     DrawTextW(dc, &mut text_wide, &mut draw_rect as *mut _, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(dc, old_font);
-    DeleteObject(font);
+    let _ = DeleteObject(font);
 }
 
 /// 默认窗口过程

@@ -3,10 +3,11 @@
 //! This module handles the Windows message loop.
 //! For now, this is a simplified placeholder that will be expanded.
 
+#![allow(dead_code)]
+
 use tracing::{info, warn};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use anyhow::anyhow;
 
 /// Message from mouse hook to main thread
 #[derive(Debug, Clone)]
@@ -30,7 +31,7 @@ impl MessageLoop {
         info!("Creating Windows message loop (placeholder)");
 
         let running = Arc::new(AtomicBool::new(true));
-        let (hook_tx, hook_rx) = std::sync::mpsc::channel();
+        let (_hook_tx, hook_rx) = std::sync::mpsc::channel();
 
         let msg_loop = Self {
             running,

@@ -6,9 +6,8 @@ mod winapi;
 use anyhow::Result;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use tracing::{debug, error, info, warn};
+use std::sync::Arc;
+use tracing::{error, info};
 use tracing_subscriber;
 
 #[tokio::main]
@@ -108,7 +107,7 @@ async fn main() -> Result<()> {
 
     let config_path_clone = config_path.clone();
     let _message_loop_handle = std::thread::spawn(move || {
-        if let (Some(recognizer), Some(config), Some(enabled)) =
+        if let (Some(recognizer), Some(_config), Some(enabled)) =
             (recognizer_opt, config_opt, enabled_opt)
         {
             // Create system tray IN MESSAGE LOOP THREAD
@@ -153,7 +152,7 @@ async fn main() -> Result<()> {
                 // Keep tray alive in this scope so it doesn't get dropped
                 let _tray = tray;
                 while GetMessageW(&mut msg, HWND::default(), 0, 0).into() {
-                    TranslateMessage(&msg);
+                    let _ = TranslateMessage(&msg);
                     DispatchMessageW(&msg);
                 }
             }
